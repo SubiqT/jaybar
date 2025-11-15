@@ -1,16 +1,24 @@
-# fastbar_poc
+# jaybar
 
-A new Flutter project.
+A Flutter-powered status bar for yabai.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- Lightweight status bar replacement
+- Built with Flutter for native performance
+- Customizable and extensible
 
-A few resources to get you started if this is your first Flutter project:
+## Installation
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```bash
+flutter pub get
+flutter run
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Development
+
+This project uses Flutter. Make sure you have Flutter installed and configured for macOS development.
+
+## License
+
+MIT
