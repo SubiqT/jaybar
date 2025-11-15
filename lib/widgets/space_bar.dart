@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/space.dart';
 import '../services/space_service.dart';
 import '../services/yabai_service.dart';
-import '../services/mock_yabai_service.dart';
-import '../services/performance_monitor.dart';
 import '../services/screen_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/spacing.dart';
@@ -17,11 +15,7 @@ class SpaceBar extends StatefulWidget {
 
 class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
   final _yabaiService = YabaiService();
-  final _mockService = MockYabaiService();
-  final _performanceMonitor = PerformanceMonitor();
   
-  SpaceService? _activeService;
-  bool _useMockService = false;
   int? _switchingToSpace;
   int? _hoveredSpace;
   String _displayInfo = '';
@@ -43,21 +37,7 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
   }
   
   Future<void> _initializeService() async {
-    try {
-      await _yabaiService.start();
-      // If yabai works, use it
-      setState(() {
-        _useMockService = false;
-        _activeService = _yabaiService;
-      });
-    } catch (e) {
-      print('Yabai not available, using mock service: $e');
-      await _mockService.start();
-      setState(() {
-        _useMockService = true;
-        _activeService = _mockService;
-      });
-    }
+    await _yabaiService.start();
   }
   
   Future<void> _getDisplayInfo() async {
@@ -79,8 +59,7 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
       _switchAnimationController.reverse();
     });
     
-    _performanceMonitor.startMeasurement();
-    await _activeService!.switchToSpace(spaceIndex);
+    await _yabaiService.switchToSpace(spaceIndex);
     
     // Clear switching state after a brief delay
     Future.delayed(Duration(milliseconds: 300), () {
@@ -95,43 +74,15 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
   @override
   void dispose() {
     _yabaiService.dispose();
-    _mockService.dispose();
     _switchAnimationController.dispose();
-    _performanceMonitor.printStats();
     super.dispose();
   }
   
   @override
   Widget build(BuildContext context) {
-    if (_activeService == null) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 12,
-            height: 12,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Colors.white70,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Loading...',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 11,
-            ),
-          ),
-        ],
-      );
-    }
-    
     return StreamBuilder<List<Space>>(
-      stream: _activeService!.spaceStream,
+      stream: _yabaiService.spaceStream,
       builder: (context, snapshot) {
-        _performanceMonitor.recordUpdate();
-        
         if (!snapshot.hasData) {
           return Row(
             mainAxisSize: MainAxisSize.min,
@@ -146,7 +97,7 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
               ),
               const SizedBox(width: 8),
               Text(
-                _useMockService ? 'Demo Mode' : 'Loading spaces...',
+                'Loading spaces...',
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 11,
@@ -159,17 +110,6 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Service status indicator (small)
-            Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _useMockService ? Colors.orange : Colors.green,
-              ),
-            ),
-            SizedBox(width: AppSpacing.itemSpacing),
-            
             // Space indicators
             ...snapshot.data!.map((space) => 
               MouseRegion(

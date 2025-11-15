@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:process_run/shell.dart';
 
 class SystemInfoService {
-  static final _shell = Shell();
+  static final _shell = Shell(verbose: false);
   
   /// Get the current active application name
   static Future<String> getCurrentApp() async {

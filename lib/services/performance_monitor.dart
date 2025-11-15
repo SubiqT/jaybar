@@ -31,14 +31,6 @@ class PerformanceMonitor {
   }
   
   void printStats() {
-    if (_latencies.isEmpty) {
-      print('No performance measurements recorded');
-      return;
-    }
-    
-    print('Performance Stats:');
-    print('  Measurements: ${measurementCount}');
-    print('  Average latency: ${averageLatency.inMilliseconds}ms');
-    print('  Max latency: ${maxLatency.inMilliseconds}ms');
+    // Performance stats available but not logged
   }
 }
