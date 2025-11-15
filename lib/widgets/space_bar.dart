@@ -5,6 +5,10 @@ import '../services/yabai_service.dart';
 import '../services/mock_yabai_service.dart';
 import '../services/performance_monitor.dart';
 import '../services/screen_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/spacing.dart';
+import '../theme/borders.dart';
+import '../theme/typography.dart';
 
 class SpaceBar extends StatefulWidget {
   @override
@@ -164,7 +168,7 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
                 color: _useMockService ? Colors.orange : Colors.green,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: AppSpacing.itemSpacing),
             
             // Space indicators
             ...snapshot.data!.map((space) => 
@@ -182,35 +186,34 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
                       
                       return Transform.scale(
                         scale: scale,
-                        child: AnimatedContainer(
-                          duration: Duration(milliseconds: 150),
-                          width: 20,
-                          height: 20,
-                          margin: EdgeInsets.symmetric(horizontal: 3),
+                        child: Container(
+                          width: AppSpacing.spaceSize,
+                          height: AppSpacing.spaceSize,
+                          margin: EdgeInsets.only(right: AppSpacing.spaceRightMargin),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: _getSpaceColor(space, isHovered, isSwitching),
-                            border: Border.all(
-                              color: _getBorderColor(space, isHovered, isSwitching),
-                              width: isSwitching ? 2 : (isHovered ? 1.5 : 1),
-                            ),
-                            boxShadow: isHovered || isSwitching ? [
-                              BoxShadow(
-                                color: Colors.blue.withOpacity(0.3),
-                                blurRadius: 4,
-                                spreadRadius: 1,
-                              )
-                            ] : null,
+                            border: space.hasFocus ? Border.all(
+                              color: AppColors.spaceFocused,
+                              width: AppBorders.focusedBorderWidth,
+                            ) : null,
                           ),
                           child: Center(
-                            child: AnimatedDefaultTextStyle(
-                              duration: Duration(milliseconds: 150),
-                              style: TextStyle(
-                                fontSize: isHovered ? 11 : 10,
-                                color: _getTextColor(space, isHovered, isSwitching),
-                                fontWeight: FontWeight.bold,
+                            child: Container(
+                              width: AppSpacing.spaceInnerSize,
+                              height: AppSpacing.spaceInnerSize,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _getInnerSpaceColor(space),
+                                border: _getInnerSpaceBorder(space),
                               ),
-                              child: Text('${space.index}'),
+                              child: Center(
+                                child: Text(
+                                  '${space.index}',
+                                  style: AppTypography.spaceNumber.copyWith(
+                                    color: _getTextColor(space),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -226,23 +229,46 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
     );
   }
   
-  Color _getSpaceColor(Space space, bool isHovered, bool isSwitching) {
-    if (isSwitching) return Colors.blue[300]!;
-    if (space.hasFocus) return Colors.blue;
-    if (isHovered) return space.isOccupied ? Colors.grey[500]! : Colors.grey[200]!;
-    return space.isOccupied ? Colors.grey[400]! : Colors.transparent;
+  Color _getInnerSpaceColor(Space space) {
+    if (space.hasFocus && !space.isOccupied) {
+      // Focused empty space: transparent
+      return AppColors.spaceEmpty;
+    }
+    if (space.hasFocus) {
+      // Focused occupied space: gradient (using magenta as solid color)
+      return AppColors.spaceFocused;
+    }
+    if (space.isOccupied) {
+      // Occupied space: foreground color
+      return AppColors.spaceOccupied;
+    }
+    // Empty space: transparent
+    return AppColors.spaceEmpty;
   }
   
-  Color _getBorderColor(Space space, bool isHovered, bool isSwitching) {
-    if (isSwitching) return Colors.blue[600]!;
-    if (isHovered) return Colors.blue[400]!;
-    return Colors.grey[600]!;
+  Border? _getInnerSpaceBorder(Space space) {
+    if (space.hasFocus && !space.isOccupied) {
+      // Focused empty space: magenta border
+      return Border.all(color: AppColors.spaceFocused, width: AppBorders.borderWidth);
+    }
+    if (!space.isOccupied) {
+      // Empty space: foreground border
+      return Border.all(color: AppColors.spaceBorder, width: AppBorders.borderWidth);
+    }
+    // Occupied spaces: no border
+    return null;
   }
   
-  Color _getTextColor(Space space, bool isHovered, bool isSwitching) {
-    if (isSwitching) return Colors.white;
-    if (space.hasFocus) return Colors.white;
-    if (isHovered) return Colors.black87;
-    return Colors.black;
+  Color _getTextColor(Space space) {
+    if (space.hasFocus && !space.isOccupied) {
+      // Focused empty space: magenta text
+      return AppColors.spaceFocused;
+    }
+    if (!space.isOccupied) {
+      // Empty space: foreground text
+      return AppColors.foreground;
+    }
+    // Occupied spaces: background text (dark on light)
+    return AppColors.background;
   }
 }

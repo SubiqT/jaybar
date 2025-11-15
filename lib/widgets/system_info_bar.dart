@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/system_info_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/spacing.dart';
+import '../theme/borders.dart';
+import '../theme/typography.dart';
 
 class SystemInfoBar extends StatefulWidget {
   @override
@@ -60,11 +64,14 @@ class _SystemInfoBarState extends State<SystemInfoBar> {
         // Current application
         if (_currentApp.isNotEmpty)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.containerPadding, 
+              vertical: 4
+            ),
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+              color: AppColors.blue.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(AppBorders.containerRadius),
+              border: Border.all(color: AppColors.blue.withOpacity(0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -72,30 +79,29 @@ class _SystemInfoBarState extends State<SystemInfoBar> {
                 Icon(
                   Icons.apps,
                   size: 12,
-                  color: Colors.white70,
+                  color: AppColors.foreground.withOpacity(0.7),
                 ),
                 const SizedBox(width: 4),
                 Text(
                   _currentApp,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: AppTypography.systemInfo,
                 ),
               ],
             ),
           ),
         
-        const SizedBox(width: 8),
+        SizedBox(width: AppSpacing.itemSpacing),
         
         // Time and date
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.containerPadding, 
+            vertical: 4
+          ),
           decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: Colors.grey.withOpacity(0.3)),
+            color: AppColors.grey400.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(AppBorders.containerRadius),
+            border: Border.all(color: AppColors.grey400.withOpacity(0.3)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -103,7 +109,7 @@ class _SystemInfoBarState extends State<SystemInfoBar> {
               Icon(
                 Icons.access_time,
                 size: 12,
-                color: Colors.white70,
+                color: AppColors.foreground.withOpacity(0.7),
               ),
               const SizedBox(width: 4),
               Column(
@@ -112,17 +118,15 @@ class _SystemInfoBarState extends State<SystemInfoBar> {
                 children: [
                   Text(
                     _currentTime,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
+                    style: AppTypography.systemInfo.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     _currentDate,
-                    style: const TextStyle(
-                      color: Colors.white70,
+                    style: AppTypography.systemInfo.copyWith(
                       fontSize: 9,
+                      color: AppColors.foreground.withOpacity(0.7),
                     ),
                   ),
                 ],

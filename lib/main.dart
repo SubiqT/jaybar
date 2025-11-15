@@ -4,6 +4,8 @@ import 'widgets/space_bar.dart';
 import 'widgets/system_info_bar.dart';
 import 'services/yabai_service.dart';
 import 'services/screen_service.dart';
+import 'theme/app_colors.dart';
+import 'theme/spacing.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,10 +74,13 @@ class _FastBarWindowState extends State<FastBarWindow> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black.withOpacity(0.8),
+      backgroundColor: Colors.transparent,
       body: Container(
         height: ScreenService.barHeight,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.barPadding),
+        decoration: BoxDecoration(
+          color: AppColors.background.withOpacity(0.8),
+        ),
         child: Row(
           children: [
             // Left side: Space indicators
