@@ -1,68 +1,92 @@
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
+import 'widgets/space_bar.dart';
+import 'widgets/system_info_bar.dart';
+import 'services/yabai_service.dart';
+import 'services/screen_service.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
+  
+  // Configure window as always-on-top bar pinned to all workspaces
+  await windowManager.waitUntilReadyToShow(null, () async {
+    await windowManager.setAsFrameless();
+    await windowManager.setAlwaysOnTop(true);
+    await windowManager.setVisibleOnAllWorkspaces(true);
+    
+    // Use dynamic screen sizing instead of hardcoded dimensions
+    await ScreenService.positionBar();
+    
+    await windowManager.show();
+  });
+  
+  runApp(const FastBarApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class FastBarApp extends StatelessWidget {
+  const FastBarApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      title: 'FastBar',
+      theme: ThemeData.dark(),
+      debugShowCheckedModeBanner: false,
+      home: const FastBarWindow(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+class FastBarWindow extends StatefulWidget {
+  const FastBarWindow({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<FastBarWindow> createState() => _FastBarWindowState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
+class _FastBarWindowState extends State<FastBarWindow> {
+  Size? _currentScreenSize;
+  
+  @override
+  void initState() {
+    super.initState();
+    _initializeScreenMonitoring();
+  }
+  
+  void _initializeScreenMonitoring() async {
+    // Get initial screen size
+    _currentScreenSize = await ScreenService.getPrimaryScreenSize();
+    
+    // Monitor for screen changes
+    ScreenService.screenChanges.listen((_) async {
+      final newSize = await ScreenService.getPrimaryScreenSize();
+      if (_currentScreenSize != null && newSize != _currentScreenSize) {
+        _currentScreenSize = newSize;
+        await ScreenService.positionBar();
+        if (mounted) setState(() {});
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+      backgroundColor: Colors.black.withOpacity(0.8),
+      body: Container(
+        height: ScreenService.barHeight,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Row(
+          children: [
+            // Left side: Space indicators
+            SpaceBar(),
+            
+            const Spacer(),
+            
+            // Right side: System info (current app, time, date)
+            SystemInfoBar(),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
