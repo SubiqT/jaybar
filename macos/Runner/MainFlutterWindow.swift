@@ -8,12 +8,15 @@ class MainFlutterWindow: NSWindow {
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
     
-    // Configure for true transparency like Übersicht
+    // Configure window transparency
     self.styleMask = [.borderless]
     self.isOpaque = false
     self.backgroundColor = NSColor.clear
-    self.hasShadow = true
+    self.hasShadow = false
     self.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)))
+    
+    // Critical: Set Flutter view controller background to clear
+    flutterViewController.backgroundColor = .clear
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 

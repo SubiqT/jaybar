@@ -36,8 +36,11 @@ class FastBarApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FastBar',
-      theme: ThemeData.dark(),
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: Colors.transparent,
+      ),
       debugShowCheckedModeBanner: false,
+      color: Colors.transparent,
       home: const FastBarWindow(),
     );
   }
@@ -76,26 +79,21 @@ class _FastBarWindowState extends State<FastBarWindow> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: ClipRRect(
-        borderRadius: BorderRadius.circular(AppBorders.barRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            height: ScreenService.barHeight,
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.barPadding),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3),
-            ),
-            child: Row(
-              children: [
-                SpaceBar(),
-                const Spacer(),
-                SystemInfoBar(),
-              ],
-            ),
-          ),
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        height: ScreenService.barHeight,
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.barPadding),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(AppBorders.barRadius),
+        ),
+        child: Row(
+          children: [
+            SpaceBar(),
+            const Spacer(),
+            SystemInfoBar(),
+          ],
         ),
       ),
     );
