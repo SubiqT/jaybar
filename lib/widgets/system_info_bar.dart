@@ -61,37 +61,6 @@ class _SystemInfoBarState extends State<SystemInfoBar> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Current application
-        if (_currentApp.isNotEmpty)
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSpacing.containerPadding, 
-              vertical: 4
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.blue.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(AppBorders.containerRadius),
-              border: Border.all(color: AppColors.blue.withOpacity(0.3)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.apps,
-                  size: 12,
-                  color: AppColors.foreground.withOpacity(0.7),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  _currentApp,
-                  style: AppTypography.systemInfo,
-                ),
-              ],
-            ),
-          ),
-        
-        SizedBox(width: AppSpacing.itemSpacing),
-        
         // Time and date
         Container(
           padding: EdgeInsets.symmetric(
@@ -106,28 +75,29 @@ class _SystemInfoBarState extends State<SystemInfoBar> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.access_time,
-                size: 12,
-                color: AppColors.foreground.withOpacity(0.7),
-              ),
-              const SizedBox(width: 4),
-              Column(
+              Row(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  Text(
+                    _currentDate,
+                    style: AppTypography.systemInfo.copyWith(
+                      fontSize: 12,
+                      color: AppColors.foreground.withOpacity(0.7),
+                      height: 1.0,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                  const SizedBox(width: 8),
                   Text(
                     _currentTime,
                     style: AppTypography.systemInfo.copyWith(
                       fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      height: 1.0,
                     ),
-                  ),
-                  Text(
-                    _currentDate,
-                    style: AppTypography.systemInfo.copyWith(
-                      fontSize: 9,
-                      color: AppColors.foreground.withOpacity(0.7),
-                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ],
               ),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'package:window_manager/window_manager.dart';
 import 'widgets/space_bar.dart';
+import 'widgets/center_bar.dart';
 import 'widgets/system_info_bar.dart';
 import 'services/yabai_service.dart';
 import 'services/screen_service.dart';
@@ -88,11 +89,18 @@ class _FastBarWindowState extends State<FastBarWindow> {
           color: Colors.black.withOpacity(0.3),
           borderRadius: BorderRadius.circular(AppBorders.barRadius),
         ),
-        child: Row(
+        child: Stack(
           children: [
-            SpaceBar(),
-            const Spacer(),
-            SystemInfoBar(),
+            Row(
+              children: [
+                SpaceBar(),
+                const Spacer(),
+                SystemInfoBar(),
+              ],
+            ),
+            Center(
+              child: CenterBar(),
+            ),
           ],
         ),
       ),

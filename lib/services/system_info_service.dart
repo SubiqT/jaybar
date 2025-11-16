@@ -40,7 +40,17 @@ class SystemInfoService {
     final month = months[now.month - 1];
     final day = now.day;
     
-    return '$weekday $month $day';
+    String getOrdinalSuffix(int day) {
+      if (day >= 11 && day <= 13) return 'th';
+      switch (day % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+      }
+    }
+    
+    return '$weekday $day${getOrdinalSuffix(day)} $month at';
   }
   
   /// Get basic system stats (simplified for now)
