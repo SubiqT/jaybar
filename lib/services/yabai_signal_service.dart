@@ -166,6 +166,9 @@ class YabaiSignalService implements SpaceService {
           if (!_isQueryingSpaces) {
             _updateSpaces();
           }
+          if (!_isQueryingApp) {
+            _updateCurrentApp();
+          }
           break;
         case 'window_created':
         case 'window_destroyed':
@@ -234,12 +237,39 @@ class YabaiSignalService implements SpaceService {
     _isQueryingApp = true;
     
     try {
-      final result = await Process.run(_yabaiPath!, ['-m', 'query', '--windows'])
+      // Get current space first
+      final spaceResult = await Process.run(_yabaiPath!, ['-m', 'query', '--spaces', '--space'])
           .timeout(Duration(milliseconds: 500));
       
-      if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty && result.stdout.toString().trim() != 'null') {
-        final windows = jsonDecode(result.stdout.toString().trim()) as List;
-        final focusedWindow = windows.firstWhere(
+      if (spaceResult.exitCode != 0) {
+        if (_cachedCurrentApp != 'Desktop') {
+          _cachedCurrentApp = 'Desktop';
+          _currentAppController.add('Desktop');
+        }
+        return;
+      }
+      
+      final currentSpace = jsonDecode(spaceResult.stdout.toString().trim());
+      final spaceIndex = currentSpace['index'];
+      
+      // Get all windows and filter by current space
+      final windowsResult = await Process.run(_yabaiPath!, ['-m', 'query', '--windows'])
+          .timeout(Duration(milliseconds: 500));
+      
+      if (windowsResult.exitCode == 0 && windowsResult.stdout.toString().trim().isNotEmpty && windowsResult.stdout.toString().trim() != 'null') {
+        final allWindows = jsonDecode(windowsResult.stdout.toString().trim()) as List;
+        final currentSpaceWindows = allWindows.where((window) => window['space'] == spaceIndex).toList();
+        
+        // If no windows on current space, show Desktop
+        if (currentSpaceWindows.isEmpty) {
+          if (_cachedCurrentApp != 'Desktop') {
+            _cachedCurrentApp = 'Desktop';
+            _currentAppController.add('Desktop');
+          }
+          return;
+        }
+        
+        final focusedWindow = currentSpaceWindows.firstWhere(
           (window) => window['has-focus'] == true,
           orElse: () => null,
         );
