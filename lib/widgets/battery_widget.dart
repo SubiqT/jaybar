@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class BatteryWidget extends StatefulWidget {
   const BatteryWidget({super.key});
@@ -58,9 +59,9 @@ class _BatteryWidgetState extends State<BatteryWidget> {
   }
 
   Color? _getBatteryColor() {
-    if (_batteryLevel < 20) return Colors.red;
-    if (_batteryLevel < 50) return Colors.yellow;
-    return null;
+    if (_batteryLevel < 20) return AppColors.red;
+    if (_batteryLevel < 50) return AppColors.yellow;
+    return AppColors.foreground;
   }
 
   @override

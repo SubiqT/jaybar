@@ -91,7 +91,7 @@ class _CenterBarState extends State<CenterBar> {
                   ? Image.memory(_appIcon!, width: 16, height: 16)
                   : Container(
                       decoration: BoxDecoration(
-                        color: AppColors.grey400.withOpacity(0.3),
+                        color: AppColors.comment.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),

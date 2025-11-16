@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class NetworkWidget extends StatefulWidget {
   const NetworkWidget({super.key});

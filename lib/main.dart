@@ -286,29 +286,32 @@ class _FastBarWindowState extends State<FastBarWindow> {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
-      child: Container(
-        height: ScreenService.barHeight,
-        padding: EdgeInsets.symmetric(horizontal: AppSpacing.barPadding),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(AppBorders.barRadius),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Row(
-              children: [
-                SpaceBar(),
-                const Spacer(),
-                SystemInfoBar(),
-              ],
-            ),
-            Center(
-              child: IgnorePointer(
-                child: CenterBar(),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          height: ScreenService.barHeight,
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.barPadding),
+          decoration: BoxDecoration(
+            color: AppColors.background.withOpacity(0.90),
+            borderRadius: BorderRadius.circular(AppBorders.barRadius),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Row(
+                children: [
+                  SpaceBar(),
+                  const Spacer(),
+                  SystemInfoBar(),
+                ],
               ),
-            ),
-          ],
+              Center(
+                child: IgnorePointer(
+                  child: CenterBar(),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class VolumeWidget extends StatefulWidget {
   const VolumeWidget({super.key});
@@ -71,7 +72,7 @@ class _VolumeWidgetState extends State<VolumeWidget> {
         Icon(
           _getVolumeIcon(),
           size: 14,
-          color: _isMuted ? Colors.red : null,
+          color: _isMuted ? AppColors.red : AppColors.foreground,
         ),
         const SizedBox(width: 4),
         Text(
