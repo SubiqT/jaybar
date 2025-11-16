@@ -11,7 +11,6 @@ class SystemInfoBar extends StatefulWidget {
 }
 
 class _SystemInfoBarState extends State<SystemInfoBar> {
-  String _currentApp = '';
   String _currentTime = '';
   String _currentDate = '';
   
@@ -32,24 +31,13 @@ class _SystemInfoBarState extends State<SystemInfoBar> {
       }
     });
     
-    // Update current app every 5 seconds
-    SystemInfoService.currentAppUpdates.listen((appName) {
-      if (mounted) {
-        setState(() {
-          _currentApp = appName;
-        });
-      }
-    });
-    
     // Get initial values
     _updateInitialValues();
   }
   
   void _updateInitialValues() async {
-    final app = await SystemInfoService.getCurrentApp();
     if (mounted) {
       setState(() {
-        _currentApp = app;
         _currentTime = SystemInfoService.getCurrentTime();
         _currentDate = SystemInfoService.getCurrentDate();
       });

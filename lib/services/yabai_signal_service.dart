@@ -19,12 +19,14 @@ class YabaiSignalService implements SpaceService {
   
   String? _yabaiPath;
   ServerSocket? _server;
-  final _shell = Shell(verbose: false);
   static const _signalPort = 8080;
   bool _isStarted = false;
   
   List<Space>? _cachedSpaces;
   String? _cachedCurrentApp;
+  Timer? _debounceTimer;
+  bool _isQueryingSpaces = false;
+  bool _isQueryingApp = false;
   
   @override
   Stream<List<Space>> get spaceStream => _spaceController.stream;
@@ -54,7 +56,7 @@ class YabaiSignalService implements SpaceService {
   
   Future<bool> _checkNetcatAvailable() async {
     try {
-      await _shell.run('which nc');
+      await Process.run('which', ['nc']);
       return true;
     } catch (e) {
       return false;
@@ -112,7 +114,7 @@ class YabaiSignalService implements SpaceService {
     
     for (final signal in signals) {
       try {
-        await _shell.run('$_yabaiPath -m signal --add event=$signal label=jaybar_$signal action="echo $signal | nc localhost $_signalPort"');
+        await Process.run(_yabaiPath!, ['-m', 'signal', '--add', 'event=$signal', 'label=jaybar_$signal', 'action=echo $signal | nc localhost $_signalPort']);
       } catch (e) {
         print('Failed to register signal $signal: $e');
       }
@@ -128,41 +130,54 @@ class YabaiSignalService implements SpaceService {
   }
   
   void _handleSignal(String signal) {
-    switch (signal) {
-      case 'space_changed':
-      case 'display_changed':
-        _updateSpaces();
-        break;
-      case 'window_focused':
-      case 'window_created':
-      case 'window_destroyed':
-        _updateSpaces();
-        _updateCurrentApp();
-        break;
-    }
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(Duration(milliseconds: 25), () {
+      switch (signal) {
+        case 'space_changed':
+        case 'display_changed':
+          if (!_isQueryingSpaces) _updateSpaces();
+          break;
+        case 'window_focused':
+        case 'window_created':
+        case 'window_destroyed':
+          if (!_isQueryingSpaces) _updateSpaces();
+          if (!_isQueryingApp) _updateCurrentApp();
+          break;
+      }
+    });
   }
   
   Future<void> _updateSpaces() async {
+    if (_isQueryingSpaces) return;
+    _isQueryingSpaces = true;
+    
     try {
-      final result = await _shell.run('$_yabaiPath -m query --spaces');
-      final spaces = (jsonDecode(result.outText.trim()) as List)
-          .map((json) => Space.fromJson(json))
-          .toList();
-      
-      if (!_spacesEqual(_cachedSpaces, spaces)) {
-        _cachedSpaces = spaces;
-        _spaceController.add(spaces);
+      final result = await Process.run(_yabaiPath!, ['-m', 'query', '--spaces']).timeout(Duration(seconds: 1));
+      if (result.exitCode == 0) {
+        final spaces = (jsonDecode(result.stdout.toString().trim()) as List)
+            .map((json) => Space.fromJson(json))
+            .toList();
+        
+        if (!_spacesEqual(_cachedSpaces, spaces)) {
+          _cachedSpaces = spaces;
+          _spaceController.add(spaces);
+        }
       }
     } catch (e) {
       print('Error updating spaces: $e');
+    } finally {
+      _isQueryingSpaces = false;
     }
   }
   
   Future<void> _updateCurrentApp() async {
+    if (_isQueryingApp) return;
+    _isQueryingApp = true;
+    
     try {
-      final result = await _shell.run('$_yabaiPath -m query --windows --window');
-      if (result.outText.trim().isNotEmpty && result.outText.trim() != 'null') {
-        final data = jsonDecode(result.outText.trim());
+      final result = await Process.run(_yabaiPath!, ['-m', 'query', '--windows', '--window']).timeout(Duration(seconds: 1));
+      if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty && result.stdout.toString().trim() != 'null') {
+        final data = jsonDecode(result.stdout.toString().trim());
         final app = data['app']?.toString() ?? 'Desktop';
         
         if (app != _cachedCurrentApp) {
@@ -175,6 +190,8 @@ class YabaiSignalService implements SpaceService {
         _cachedCurrentApp = 'Desktop';
         _currentAppController.add('Desktop');
       }
+    } finally {
+      _isQueryingApp = false;
     }
   }
   
@@ -203,7 +220,7 @@ class YabaiSignalService implements SpaceService {
   Future<void> switchToSpace(int index) async {
     if (_yabaiPath != null) {
       try {
-        await _shell.run('$_yabaiPath -m space --focus $index');
+        await Process.run(_yabaiPath!, ['-m', 'space', '--focus', index.toString()]);
       } catch (e) {
         print('Error switching to space $index: $e');
       }
@@ -212,6 +229,7 @@ class YabaiSignalService implements SpaceService {
   
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _cleanupSignals();
     _server?.close();
     _spaceController.close();
@@ -231,7 +249,7 @@ class YabaiSignalService implements SpaceService {
     
     for (final signal in signals) {
       try {
-        await _shell.run('$_yabaiPath -m signal --remove jaybar_$signal');
+        await Process.run(_yabaiPath!, ['-m', 'signal', '--remove', 'jaybar_$signal']);
       } catch (e) {
         // Ignore errors - signal might not exist
       }

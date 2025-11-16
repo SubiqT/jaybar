@@ -97,9 +97,9 @@ class SystemInfoService {
     return Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now());
   }
   
-  /// Create a stream that updates every 100ms for current app
+  /// Create a stream that updates every 5 seconds for current app
   static Stream<String> get currentAppUpdates {
-    return Stream.periodic(const Duration(milliseconds: 100))
+    return Stream.periodic(const Duration(seconds: 5))
         .asyncMap((_) => getCurrentApp());
   }
 }
