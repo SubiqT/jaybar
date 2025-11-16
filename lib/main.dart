@@ -33,6 +33,10 @@ Future<void> handleCliCommand(List<String> args) async {
     case '--disable-service':
       await disableService();
       break;
+    case '--service':
+      // Run as headless service
+      await runAsService();
+      break;
     case '--help':
     case '-h':
       printHelp();
@@ -40,8 +44,9 @@ Future<void> handleCliCommand(List<String> args) async {
     default:
       print('Unknown command: $command');
       printHelp();
-      exit(1);
   }
+  
+  exit(0);
 }
 
 void printHelp() {
@@ -70,7 +75,7 @@ Future<void> startService() async {
   
   if (!File(plistPath).existsSync()) {
     print('Service not enabled. Run: jaybar --enable-service');
-    exit(1);
+    return;
   }
   
   final result = await Process.run('launchctl', ['load', plistPath]);
@@ -78,7 +83,6 @@ Future<void> startService() async {
     print('jaybar service started');
   } else {
     print('Failed to start service: ${result.stderr}');
-    exit(1);
   }
 }
 
@@ -86,7 +90,7 @@ Future<void> stopService() async {
   final homeDir = Platform.environment['HOME'];
   if (homeDir == null) {
     print('Error: HOME environment variable not found');
-    exit(1);
+    return;
   }
   
   final plistPath = '$homeDir/Library/LaunchAgents/com.jaybar.plist';
@@ -96,7 +100,6 @@ Future<void> stopService() async {
     print('jaybar service stopped');
   } else {
     print('Failed to stop service: ${result.stderr}');
-    exit(1);
   }
 }
 
@@ -116,7 +119,7 @@ Future<void> disableService() async {
   final homeDir = Platform.environment['HOME'];
   if (homeDir == null) {
     print('Error: HOME environment variable not found');
-    exit(1);
+    return;
   }
   
   final plistPath = '$homeDir/Library/LaunchAgents/com.jaybar.plist';
@@ -163,6 +166,7 @@ Future<void> installLaunchAgent() async {
     <key>ProgramArguments</key>
     <array>
         <string>$executablePath</string>
+        <string>--service</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -184,18 +188,9 @@ Future<void> installLaunchAgent() async {
   }
 }
 
-void main(List<String> args) async {
-  // Handle CLI commands
-  if (args.isNotEmpty) {
-    await handleCliCommand(args);
-    exit(0);
-  }
-  
+Future<void> runAsService() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
-  
-  // Install launch agent on first run
-  await installLaunchAgent();
   
   // Initialize yabai signal service
   try {
@@ -226,6 +221,17 @@ void main(List<String> args) async {
   });
   
   runApp(const FastBarApp());
+}
+
+void main(List<String> args) async {
+  // Handle CLI commands BEFORE any Flutter initialization
+  if (args.isNotEmpty) {
+    await handleCliCommand(args);
+    return;
+  }
+  
+  // Run GUI mode
+  await runAsService();
 }
 
 class FastBarApp extends StatelessWidget {
