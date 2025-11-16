@@ -11,6 +11,8 @@ import 'theme/app_colors.dart';
 import 'theme/spacing.dart';
 import 'theme/borders.dart';
 
+const platform = MethodChannel('jaybar/window');
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
@@ -20,6 +22,15 @@ void main() async {
     await windowManager.setAsFrameless();
     await windowManager.setAlwaysOnTop(true);
     await windowManager.setVisibleOnAllWorkspaces(true);
+    await windowManager.setSkipTaskbar(true);
+    await windowManager.setIgnoreMouseEvents(false);
+    
+    // Set window collection behavior to exclude from Mission Control
+    try {
+      await platform.invokeMethod('setWindowCollectionBehavior');
+    } catch (e) {
+      print('Failed to set window collection behavior: $e');
+    }
     
     // Use dynamic screen sizing instead of hardcoded dimensions
     await ScreenService.positionBar();
