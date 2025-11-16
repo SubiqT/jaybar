@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:process_run/shell.dart';
 
@@ -8,17 +9,35 @@ class SystemInfoService {
   /// Get the current active application name
   static Future<String> getCurrentApp() async {
     try {
-      final result = await _shell.run('''
-        osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true'
-      ''');
-      
+      final result = await _shell.run('yabai -m query --windows --window');
       if (result.isNotEmpty && result.first.stdout != null) {
-        return result.first.stdout.toString().trim();
+        final json = result.first.stdout.toString().trim();
+        if (json.isNotEmpty && json != 'null' && json != '{}') {
+          final data = jsonDecode(json);
+          final app = data['app']?.toString();
+          if (app != null && app.isNotEmpty) {
+            return app;
+          }
+        }
       }
     } catch (e) {
-      // Fallback if AppleScript fails
+      // If yabai query fails, try getting all windows and find focused one
+      try {
+        final result = await _shell.run('yabai -m query --windows');
+        if (result.isNotEmpty && result.first.stdout != null) {
+          final json = result.first.stdout.toString().trim();
+          final windows = jsonDecode(json) as List;
+          for (final window in windows) {
+            if (window['has-focus'] == true) {
+              return window['app']?.toString() ?? 'Unknown';
+            }
+          }
+        }
+      } catch (e2) {
+        print('Error getting current app: $e2');
+      }
     }
-    return 'Unknown';
+    return 'Desktop';
   }
   
   /// Get current time formatted for display
@@ -78,9 +97,9 @@ class SystemInfoService {
     return Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now());
   }
   
-  /// Create a stream that updates every 5 seconds for current app
+  /// Create a stream that updates every 100ms for current app
   static Stream<String> get currentAppUpdates {
-    return Stream.periodic(const Duration(seconds: 5))
+    return Stream.periodic(const Duration(milliseconds: 100))
         .asyncMap((_) => getCurrentApp());
   }
 }
