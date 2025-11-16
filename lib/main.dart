@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
+import 'dart:io';
 import 'package:window_manager/window_manager.dart';
 import 'widgets/space_bar.dart';
 import 'widgets/center_bar.dart';
@@ -13,9 +14,188 @@ import 'theme/borders.dart';
 
 const platform = MethodChannel('jaybar/window');
 
-void main() async {
+Future<void> handleCliCommand(List<String> args) async {
+  final command = args[0];
+  
+  switch (command) {
+    case '--start-service':
+      await startService();
+      break;
+    case '--stop-service':
+      await stopService();
+      break;
+    case '--restart-service':
+      await restartService();
+      break;
+    case '--enable-service':
+      await enableService();
+      break;
+    case '--disable-service':
+      await disableService();
+      break;
+    case '--help':
+    case '-h':
+      printHelp();
+      break;
+    default:
+      print('Unknown command: $command');
+      printHelp();
+      exit(1);
+  }
+}
+
+void printHelp() {
+  print('''
+jaybar - A Flutter-powered status bar for yabai
+
+Usage:
+  jaybar                    Start the status bar GUI
+  jaybar --start-service    Start the jaybar service
+  jaybar --stop-service     Stop the jaybar service  
+  jaybar --restart-service  Restart the jaybar service
+  jaybar --enable-service   Enable the launch agent
+  jaybar --disable-service  Disable the launch agent
+  jaybar --help             Show this help message
+''');
+}
+
+Future<void> startService() async {
+  final homeDir = Platform.environment['HOME'];
+  if (homeDir == null) {
+    print('Error: HOME environment variable not found');
+    exit(1);
+  }
+  
+  final plistPath = '$homeDir/Library/LaunchAgents/com.jaybar.plist';
+  
+  if (!File(plistPath).existsSync()) {
+    print('Service not enabled. Run: jaybar --enable-service');
+    exit(1);
+  }
+  
+  final result = await Process.run('launchctl', ['load', plistPath]);
+  if (result.exitCode == 0) {
+    print('jaybar service started');
+  } else {
+    print('Failed to start service: ${result.stderr}');
+    exit(1);
+  }
+}
+
+Future<void> stopService() async {
+  final homeDir = Platform.environment['HOME'];
+  if (homeDir == null) {
+    print('Error: HOME environment variable not found');
+    exit(1);
+  }
+  
+  final plistPath = '$homeDir/Library/LaunchAgents/com.jaybar.plist';
+  
+  final result = await Process.run('launchctl', ['unload', plistPath]);
+  if (result.exitCode == 0) {
+    print('jaybar service stopped');
+  } else {
+    print('Failed to stop service: ${result.stderr}');
+    exit(1);
+  }
+}
+
+Future<void> restartService() async {
+  print('Stopping jaybar service...');
+  await stopService();
+  await Future.delayed(Duration(milliseconds: 500));
+  print('Starting jaybar service...');
+  await startService();
+}
+
+Future<void> enableService() async {
+  await installLaunchAgent();
+}
+
+Future<void> disableService() async {
+  final homeDir = Platform.environment['HOME'];
+  if (homeDir == null) {
+    print('Error: HOME environment variable not found');
+    exit(1);
+  }
+  
+  final plistPath = '$homeDir/Library/LaunchAgents/com.jaybar.plist';
+  
+  if (File(plistPath).existsSync()) {
+    // Stop service first
+    await Process.run('launchctl', ['unload', plistPath]);
+    
+    // Remove plist file
+    await File(plistPath).delete();
+    print('jaybar service disabled');
+  } else {
+    print('Service not enabled');
+  }
+}
+
+Future<void> installLaunchAgent() async {
+  final homeDir = Platform.environment['HOME'];
+  if (homeDir == null) {
+    print('HOME environment variable not found');
+    return;
+  }
+  
+  final launchAgentsDir = Directory('$homeDir/Library/LaunchAgents');
+  final plistPath = '${launchAgentsDir.path}/com.jaybar.plist';
+  
+  if (File(plistPath).existsSync()) {
+    print('Launch agent already enabled');
+    return;
+  }
+  
+  try {
+    await launchAgentsDir.create(recursive: true);
+    
+    // Get current executable path
+    final executablePath = Platform.resolvedExecutable;
+    
+    final plistContent = '''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.jaybar</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>$executablePath</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>''';
+    
+    await File(plistPath).writeAsString(plistContent);
+    
+    final result = await Process.run('launchctl', ['load', plistPath]);
+    if (result.exitCode == 0) {
+      print('Launch agent enabled successfully');
+    } else {
+      print('Failed to load launch agent: ${result.stderr}');
+    }
+  } catch (e) {
+    print('Failed to enable launch agent: $e');
+  }
+}
+
+void main(List<String> args) async {
+  // Handle CLI commands
+  if (args.isNotEmpty) {
+    await handleCliCommand(args);
+    return;
+  }
+  
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
+  
+  // Install launch agent on first run
+  await installLaunchAgent();
   
   // Initialize yabai signal service
   try {
