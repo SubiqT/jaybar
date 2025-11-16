@@ -7,6 +7,7 @@ import '../theme/typography.dart';
 import 'battery_widget.dart';
 import 'volume_widget.dart';
 import 'network_widget.dart';
+import 'caffeinate_widget.dart';
 
 class SystemInfoBar extends StatefulWidget {
   @override
@@ -53,6 +54,14 @@ class _SystemInfoBarState extends State<SystemInfoBar> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        // Caffeinate
+        Container(
+          height: 24,
+          alignment: Alignment.center,
+          padding: EdgeInsets.symmetric(horizontal: 4),
+          child: CaffeinateWidget(),
+        ),
+        const SizedBox(width: 4),
         // Volume
         Container(
           height: 24,
