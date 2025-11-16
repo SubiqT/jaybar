@@ -57,26 +57,31 @@ class _SystemInfoBarState extends State<SystemInfoBar> {
         Container(
           height: 24,
           alignment: Alignment.center,
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.containerPadding),
+          padding: EdgeInsets.symmetric(horizontal: 4),
           child: VolumeWidget(),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 4),
         // Battery
         Container(
           height: 24,
           alignment: Alignment.center,
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.containerPadding),
+          padding: EdgeInsets.symmetric(horizontal: 4),
           child: BatteryWidget(),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 4),
         // Network
-        NetworkWidget(),
-        const SizedBox(width: 8),
+        Container(
+          height: 24,
+          alignment: Alignment.center,
+          padding: EdgeInsets.symmetric(horizontal: 4),
+          child: NetworkWidget(),
+        ),
+        const SizedBox(width: 4),
         // Time and date
         Container(
           height: 24,
           alignment: Alignment.center,
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.containerPadding),
+          padding: EdgeInsets.symmetric(horizontal: 4),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
