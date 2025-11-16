@@ -5,6 +5,7 @@ import '../theme/spacing.dart';
 import '../theme/borders.dart';
 import '../theme/typography.dart';
 import 'battery_widget.dart';
+import 'volume_widget.dart';
 
 class SystemInfoBar extends StatefulWidget {
   @override
@@ -50,6 +51,20 @@ class _SystemInfoBarState extends State<SystemInfoBar> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Volume
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.containerPadding, 
+            vertical: 4
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.grey400.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(AppBorders.containerRadius),
+            border: Border.all(color: AppColors.grey400.withOpacity(0.3)),
+          ),
+          child: VolumeWidget(),
+        ),
+        const SizedBox(width: 8),
         // Battery
         Container(
           padding: EdgeInsets.symmetric(
