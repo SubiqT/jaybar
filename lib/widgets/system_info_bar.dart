@@ -6,6 +6,7 @@ import '../theme/borders.dart';
 import '../theme/typography.dart';
 import 'battery_widget.dart';
 import 'volume_widget.dart';
+import 'network_widget.dart';
 
 class SystemInfoBar extends StatefulWidget {
   @override
@@ -77,6 +78,20 @@ class _SystemInfoBarState extends State<SystemInfoBar> {
             border: Border.all(color: AppColors.grey400.withOpacity(0.3)),
           ),
           child: BatteryWidget(),
+        ),
+        const SizedBox(width: 8),
+        // Network
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.containerPadding, 
+            vertical: 4
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.grey400.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(AppBorders.containerRadius),
+            border: Border.all(color: AppColors.grey400.withOpacity(0.3)),
+          ),
+          child: NetworkWidget(),
         ),
         const SizedBox(width: 8),
         // Time and date
