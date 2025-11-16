@@ -69,7 +69,8 @@ class SystemTrayService {
     
     // Restart the process
     final executable = Platform.resolvedExecutable;
-    Process.start(executable, []).then((_) => exit(0));
+    final process = await Process.start(executable, []);
+    process.exitCode.then((_) => exit(0));
   }
 
   Future<void> _handleQuit() async {

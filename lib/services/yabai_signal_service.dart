@@ -186,10 +186,14 @@ class YabaiSignalService implements SpaceService {
     if (_isQueryingSpaces) return;
     _isQueryingSpaces = true;
     
+    Process? process;
     try {
-      final result = await Process.run(_yabaiPath!, ['-m', 'query', '--spaces']).timeout(Duration(seconds: 2));
-      if (result.exitCode == 0) {
-        final spaces = (jsonDecode(result.stdout.toString().trim()) as List)
+      process = await Process.start(_yabaiPath!, ['-m', 'query', '--spaces']);
+      final result = await process.exitCode.timeout(Duration(seconds: 2));
+      
+      if (result == 0) {
+        final stdout = await process.stdout.transform(utf8.decoder).join();
+        final spaces = (jsonDecode(stdout.trim()) as List)
             .map((json) => Space.fromJson(json))
             .toList();
         
@@ -203,29 +207,32 @@ class YabaiSignalService implements SpaceService {
       }
     } catch (e) {
       print('Error updating spaces: $e');
+      process?.kill();
     } finally {
       _isQueryingSpaces = false;
     }
   }
   
   Future<void> _cacheOpenAppIcons() async {
+    Process? process;
     try {
-      final result = await Process.run(_yabaiPath!, ['-m', 'query', '--windows'])
-          .timeout(Duration(milliseconds: 500));
+      process = await Process.start(_yabaiPath!, ['-m', 'query', '--windows']);
+      final result = await process.exitCode.timeout(Duration(milliseconds: 500));
       
-      if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
-        final windows = jsonDecode(result.stdout.toString().trim()) as List;
-        final appNames = windows
-            .map((window) => window['app']?.toString())
-            .where((app) => app != null && app.isNotEmpty)
-            .cast<String>()
-            .toSet()
-            .toList();
-        
-
+      if (result == 0) {
+        final stdout = await process.stdout.transform(utf8.decoder).join();
+        if (stdout.trim().isNotEmpty) {
+          final windows = jsonDecode(stdout.trim()) as List;
+          final appNames = windows
+              .map((window) => window['app']?.toString())
+              .where((app) => app != null && app.isNotEmpty)
+              .cast<String>()
+              .toSet()
+              .toList();
+        }
       }
     } catch (e) {
-      // Handle error silently
+      process?.kill();
     }
   }
   
@@ -235,12 +242,14 @@ class YabaiSignalService implements SpaceService {
     }
     _isQueryingApp = true;
     
+    Process? spaceProcess;
+    Process? windowsProcess;
     try {
       // Get current space first
-      final spaceResult = await Process.run(_yabaiPath!, ['-m', 'query', '--spaces', '--space'])
-          .timeout(Duration(milliseconds: 500));
+      spaceProcess = await Process.start(_yabaiPath!, ['-m', 'query', '--spaces', '--space']);
+      final spaceResult = await spaceProcess.exitCode.timeout(Duration(milliseconds: 500));
       
-      if (spaceResult.exitCode != 0) {
+      if (spaceResult != 0) {
         if (_cachedCurrentApp != 'Desktop') {
           _cachedCurrentApp = 'Desktop';
           _currentAppController.add('Desktop');
@@ -248,39 +257,45 @@ class YabaiSignalService implements SpaceService {
         return;
       }
       
-      final currentSpace = jsonDecode(spaceResult.stdout.toString().trim());
+      final spaceStdout = await spaceProcess.stdout.transform(utf8.decoder).join();
+      final currentSpace = jsonDecode(spaceStdout.trim());
       final spaceIndex = currentSpace['index'];
       
       // Get all windows and filter by current space
-      final windowsResult = await Process.run(_yabaiPath!, ['-m', 'query', '--windows'])
-          .timeout(Duration(milliseconds: 500));
+      windowsProcess = await Process.start(_yabaiPath!, ['-m', 'query', '--windows']);
+      final windowsResult = await windowsProcess.exitCode.timeout(Duration(milliseconds: 500));
       
-      if (windowsResult.exitCode == 0 && windowsResult.stdout.toString().trim().isNotEmpty && windowsResult.stdout.toString().trim() != 'null') {
-        final allWindows = jsonDecode(windowsResult.stdout.toString().trim()) as List;
-        final currentSpaceWindows = allWindows.where((window) => window['space'] == spaceIndex).toList();
-        
-        // If no windows on current space, show Desktop
-        if (currentSpaceWindows.isEmpty) {
-          if (_cachedCurrentApp != 'Desktop') {
-            _cachedCurrentApp = 'Desktop';
-            _currentAppController.add('Desktop');
+      if (windowsResult == 0) {
+        final windowsStdout = await windowsProcess.stdout.transform(utf8.decoder).join();
+        if (windowsStdout.trim().isNotEmpty && windowsStdout.trim() != 'null') {
+          final allWindows = jsonDecode(windowsStdout.trim()) as List;
+          final currentSpaceWindows = allWindows.where((window) => window['space'] == spaceIndex).toList();
+          
+          // If no windows on current space, show Desktop
+          if (currentSpaceWindows.isEmpty) {
+            if (_cachedCurrentApp != 'Desktop') {
+              _cachedCurrentApp = 'Desktop';
+              _currentAppController.add('Desktop');
+            }
+            return;
           }
-          return;
-        }
-        
-        final focusedWindow = currentSpaceWindows.firstWhere(
-          (window) => window['has-focus'] == true,
-          orElse: () => null,
-        );
-        
-        final app = focusedWindow?['app']?.toString() ?? 'Desktop';
-        
-        if (app != _cachedCurrentApp || _cachedCurrentApp == null) {
-          _cachedCurrentApp = app;
-          _currentAppController.add(app);
+          
+          final focusedWindow = currentSpaceWindows.firstWhere(
+            (window) => window['has-focus'] == true,
+            orElse: () => null,
+          );
+          
+          final app = focusedWindow?['app']?.toString() ?? 'Desktop';
+          
+          if (app != _cachedCurrentApp || _cachedCurrentApp == null) {
+            _cachedCurrentApp = app;
+            _currentAppController.add(app);
+          }
         }
       }
     } catch (e) {
+      spaceProcess?.kill();
+      windowsProcess?.kill();
       if (_cachedCurrentApp != 'Desktop') {
         _cachedCurrentApp = 'Desktop';
         _currentAppController.add('Desktop');
