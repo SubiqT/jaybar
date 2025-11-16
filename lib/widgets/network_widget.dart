@@ -12,6 +12,8 @@ class NetworkWidget extends StatefulWidget {
 class _NetworkWidgetState extends State<NetworkWidget> {
   bool _isConnected = false;
   String _connectionType = '';
+  String _networkName = '';
+  bool _showName = false;
   Timer? _timer;
 
   @override
@@ -34,9 +36,28 @@ class _NetworkWidgetState extends State<NetworkWidget> {
       final wifiOutput = wifiResult.stdout.toString();
       
       if (wifiOutput.contains('Current Network Information:')) {
+        // Extract network name from Wi-Fi output
+        final lines = wifiOutput.split('\n');
+        String networkName = '';
+        for (int i = 0; i < lines.length; i++) {
+          if (lines[i].contains('Current Network Information:')) {
+            // Look for the network name in the following lines
+            for (int j = i + 1; j < lines.length && j < i + 10; j++) {
+              if (lines[j].trim().isEmpty) break;
+              final line = lines[j].trim();
+              if (!line.contains(':') && line.isNotEmpty) {
+                networkName = line;
+                break;
+              }
+            }
+            break;
+          }
+        }
+        
         setState(() {
           _isConnected = true;
           _connectionType = 'wifi';
+          _networkName = networkName.isNotEmpty ? networkName : 'Wi-Fi';
         });
       } else {
         // Check for any active network connection
@@ -45,11 +66,13 @@ class _NetworkWidgetState extends State<NetworkWidget> {
           setState(() {
             _isConnected = true;
             _connectionType = 'ethernet';
+            _networkName = 'Ethernet';
           });
         } else {
           setState(() {
             _isConnected = false;
             _connectionType = '';
+            _networkName = '';
           });
         }
       }
@@ -57,6 +80,7 @@ class _NetworkWidgetState extends State<NetworkWidget> {
       setState(() {
         _isConnected = false;
         _connectionType = '';
+        _networkName = '';
       });
     }
   }
@@ -70,15 +94,28 @@ class _NetworkWidgetState extends State<NetworkWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          _getNetworkIcon(),
-          size: 14,
-          color: _isConnected ? null : Colors.red,
+    return GestureDetector(
+      onTap: () => setState(() => _showName = !_showName),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _getNetworkIcon(),
+              size: 14,
+              color: _isConnected ? null : Colors.red,
+            ),
+            if (_showName && _networkName.isNotEmpty) ...[
+              const SizedBox(width: 4),
+              Text(
+                _networkName,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
+          ],
         ),
-      ],
+      ),
     );
   }
 }
