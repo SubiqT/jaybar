@@ -24,13 +24,23 @@ jobs:
     - name: Generate version
       id: version
       run: |
-        VERSION=$(date -u +"%Y.%m.%d.%H%M")
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+        MAJOR_VERSION=$(grep '^version:' pubspec.yaml | cut -d' ' -f2 | cut -d'.' -f1)
+        
+        if [ "${{ github.ref }}" == "refs/heads/release" ]; then
+          MINOR_VERSION="0"
+        elif [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          MINOR_VERSION="1"
+        else
+          MINOR_VERSION="1"
+        fi
+        
+        FULL_VERSION="$MAJOR_VERSION.$MINOR_VERSION.${{ github.run_number }}"
+        echo "version=$FULL_VERSION" >> $GITHUB_OUTPUT
+        echo "tag=v$FULL_VERSION" >> $GITHUB_OUTPUT
     
     - name: Update pubspec.yaml
       run: |
-        sed -i '' "s/^version: .*/version: ${{ steps.version.outputs.version }}+1/" pubspec.yaml
+        sed -i '' "s/^version: .*/version: ${{ steps.version.outputs.version }}/" pubspec.yaml
     
     - name: Build release
       run: |
@@ -67,6 +77,8 @@ jobs:
           
           ## Installation
           Download and extract the zip file, then move jaybar.app to your Applications folder.
+          
+          ${{ github.ref == 'refs/heads/master' && '**This is a development build from master branch.**' || '' }}
         files: jaybar-${{ steps.version.outputs.version }}-macos.zip
         draft: false
         prerelease: ${{ github.ref == 'refs/heads/master' }}
