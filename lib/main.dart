@@ -294,6 +294,7 @@ class _FastBarWindowState extends State<FastBarWindow> {
           borderRadius: BorderRadius.circular(AppBorders.barRadius),
         ),
         child: Stack(
+          alignment: Alignment.center,
           children: [
             Row(
               children: [
@@ -303,7 +304,9 @@ class _FastBarWindowState extends State<FastBarWindow> {
               ],
             ),
             Center(
-              child: CenterBar(),
+              child: IgnorePointer(
+                child: CenterBar(),
+              ),
             ),
           ],
         ),

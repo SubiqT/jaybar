@@ -69,6 +69,7 @@ class _BatteryWidgetState extends State<BatteryWidget> {
     
     return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Icon(
           _getBatteryIcon(),

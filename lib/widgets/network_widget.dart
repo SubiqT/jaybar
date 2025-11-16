@@ -54,34 +54,42 @@ class _NetworkWidgetState extends State<NetworkWidget> {
           }
         }
         
-        setState(() {
-          _isConnected = true;
-          _connectionType = 'wifi';
-          _networkName = networkName.isNotEmpty ? networkName : 'Wi-Fi';
-        });
+        if (mounted) {
+          setState(() {
+            _isConnected = true;
+            _connectionType = 'wifi';
+            _networkName = networkName.isNotEmpty ? networkName : 'Wi-Fi';
+          });
+        }
       } else {
         // Check for any active network connection
         final routeResult = await Process.run('route', ['get', 'default']);
         if (routeResult.exitCode == 0) {
-          setState(() {
-            _isConnected = true;
-            _connectionType = 'ethernet';
-            _networkName = 'Ethernet';
-          });
+          if (mounted) {
+            setState(() {
+              _isConnected = true;
+              _connectionType = 'ethernet';
+              _networkName = 'Ethernet';
+            });
+          }
         } else {
-          setState(() {
-            _isConnected = false;
-            _connectionType = '';
-            _networkName = '';
-          });
+          if (mounted) {
+            setState(() {
+              _isConnected = false;
+              _connectionType = '';
+              _networkName = '';
+            });
+          }
         }
       }
     } catch (e) {
-      setState(() {
-        _isConnected = false;
-        _connectionType = '';
-        _networkName = '';
-      });
+      if (mounted) {
+        setState(() {
+          _isConnected = false;
+          _connectionType = '';
+          _networkName = '';
+        });
+      }
     }
   }
 
@@ -95,11 +103,17 @@ class _NetworkWidgetState extends State<NetworkWidget> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => setState(() => _showName = !_showName),
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        if (mounted) {
+          setState(() => _showName = !_showName);
+        }
+      },
       child: AnimatedSize(
         duration: const Duration(milliseconds: 200),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(
               _getNetworkIcon(),

@@ -66,6 +66,7 @@ class _VolumeWidgetState extends State<VolumeWidget> {
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Icon(
           _getVolumeIcon(),

@@ -77,17 +77,12 @@ class _CenterBarState extends State<CenterBar> {
       duration: const Duration(milliseconds: 150),
       child: Container(
         key: ValueKey(_currentApp),
-        padding: EdgeInsets.symmetric(
-          horizontal: AppSpacing.containerPadding,
-          vertical: 4
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.grey400.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(AppBorders.containerRadius),
-          border: Border.all(color: AppColors.grey400.withOpacity(0.3)),
-        ),
+        height: 24,
+        alignment: Alignment.center,
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.containerPadding),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(
               width: 16,
