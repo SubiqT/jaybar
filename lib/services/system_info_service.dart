@@ -1,17 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:process_run/shell.dart';
 
 class SystemInfoService {
-  static final _shell = Shell(verbose: false);
-  
   /// Get the current active application name
   static Future<String> getCurrentApp() async {
     try {
-      final result = await _shell.run('yabai -m query --windows --window');
-      if (result.isNotEmpty && result.first.stdout != null) {
-        final json = result.first.stdout.toString().trim();
+      final result = await Process.run('yabai', ['-m', 'query', '--windows', '--window']);
+      if (result.exitCode == 0) {
+        final json = result.stdout.toString().trim();
         if (json.isNotEmpty && json != 'null' && json != '{}') {
           final data = jsonDecode(json);
           final app = data['app']?.toString();
@@ -23,9 +20,9 @@ class SystemInfoService {
     } catch (e) {
       // If yabai query fails, try getting all windows and find focused one
       try {
-        final result = await _shell.run('yabai -m query --windows');
-        if (result.isNotEmpty && result.first.stdout != null) {
-          final json = result.first.stdout.toString().trim();
+        final result = await Process.run('yabai', ['-m', 'query', '--windows']);
+        if (result.exitCode == 0) {
+          final json = result.stdout.toString().trim();
           final windows = jsonDecode(json) as List;
           for (final window in windows) {
             if (window['has-focus'] == true) {
@@ -76,8 +73,8 @@ class SystemInfoService {
   static Future<Map<String, String>> getSystemStats() async {
     try {
       // Get memory usage
-      final memResult = await _shell.run('vm_stat | head -4');
-      final cpuResult = await _shell.run('top -l 1 -n 0 | grep "CPU usage"');
+      final memResult = await Process.run('sh', ['-c', 'vm_stat | head -4']);
+      final cpuResult = await Process.run('sh', ['-c', 'top -l 1 -n 0 | grep "CPU usage"']);
       
       // Parse basic info (simplified)
       return {

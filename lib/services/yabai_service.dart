@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:process_run/shell.dart';
 import '../models/space.dart';
 import 'space_service.dart';
 
@@ -14,7 +13,6 @@ class YabaiService implements SpaceService {
   
   String? _yabaiPath;
   Timer? _pollTimer;
-  final _shell = Shell(verbose: false);
   
   // Caching and state management
   List<Space>? _cachedSpaces;
@@ -37,8 +35,10 @@ class YabaiService implements SpaceService {
   
   Future<void> _pollSpaces() async {
     try {
-      final result = await _shell.run('$_yabaiPath -m query --spaces');
-      final rawOutput = result.outText.trim();
+      final result = await Process.run(_yabaiPath!, ['-m', 'query', '--spaces']);
+      if (result.exitCode != 0) return;
+      
+      final rawOutput = result.stdout.toString().trim();
       
       // Only process if output changed
       if (rawOutput != _lastRawOutput) {
@@ -85,7 +85,7 @@ class YabaiService implements SpaceService {
   Future<void> switchToSpace(int index) async {
     if (_yabaiPath != null) {
       try {
-        await _shell.run('$_yabaiPath -m space --focus $index');
+        await Process.run(_yabaiPath!, ['-m', 'space', '--focus', index.toString()]);
       } catch (e) {
         print('Error switching to space $index: $e');
       }

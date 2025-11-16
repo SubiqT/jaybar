@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:process_run/shell.dart';
 import '../models/space.dart';
 import 'space_service.dart';
 import 'app_icon_service.dart';
