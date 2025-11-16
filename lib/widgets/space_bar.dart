@@ -84,26 +84,29 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
       stream: _yabaiService.spaceStream,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 12,
-                height: 12,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white70,
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white70,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Loading spaces...',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11,
+                const SizedBox(width: 8),
+                Text(
+                  'Loading spaces...',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         }
         
@@ -124,33 +127,36 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
                       final isSwitching = _switchingToSpace == space.index;
                       final scale = isSwitching ? _switchAnimation.value : (isHovered ? 1.1 : 1.0);
                       
-                      return Transform.scale(
-                        scale: scale,
-                        child: Container(
-                          width: AppSpacing.spaceSize,
-                          height: AppSpacing.spaceSize,
-                          margin: EdgeInsets.only(right: AppSpacing.spaceRightMargin),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: space.hasFocus ? Border.all(
-                              color: AppColors.spaceFocused,
-                              width: AppBorders.focusedBorderWidth,
-                            ) : null,
-                          ),
-                          child: Center(
-                            child: Container(
-                              width: AppSpacing.spaceInnerSize,
-                              height: AppSpacing.spaceInnerSize,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: _getInnerSpaceColor(space),
-                                border: _getInnerSpaceBorder(space),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '${space.index}',
-                                  style: AppTypography.spaceNumber.copyWith(
-                                    color: _getTextColor(space),
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Transform.scale(
+                          scale: scale,
+                          child: Container(
+                            width: AppSpacing.spaceSize,
+                            height: AppSpacing.spaceSize,
+                            margin: EdgeInsets.only(right: AppSpacing.spaceRightMargin),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: space.hasFocus ? Border.all(
+                                color: AppColors.spaceFocused,
+                                width: AppBorders.focusedBorderWidth,
+                              ) : null,
+                            ),
+                            child: Center(
+                              child: Container(
+                                width: AppSpacing.spaceInnerSize,
+                                height: AppSpacing.spaceInnerSize,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _getInnerSpaceColor(space),
+                                  border: _getInnerSpaceBorder(space),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${space.index}',
+                                    style: AppTypography.spaceNumber.copyWith(
+                                      color: _getTextColor(space),
+                                    ),
                                   ),
                                 ),
                               ),
