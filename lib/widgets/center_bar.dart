@@ -45,6 +45,14 @@ class _CenterBarState extends State<CenterBar> {
   }
 
   void _updateAppIcon() {
+    // Use blank placeholder for Desktop
+    if (_currentApp == 'Desktop') {
+      setState(() {
+        _appIcon = null;
+      });
+      return;
+    }
+    
     // Check cache first
     final cachedIcon = AppIconService.getCachedIcon(_currentApp);
     if (cachedIcon != null) {
