@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/system_info_service.dart';
+import '../services/yabai_signal_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/typography.dart';
 import '../theme/spacing.dart';
@@ -14,27 +14,18 @@ class CenterBar extends StatefulWidget {
 
 class _CenterBarState extends State<CenterBar> {
   String _currentApp = '';
+  final _yabaiService = YabaiSignalService.instance;
 
   @override
   void initState() {
     super.initState();
-    _updateAppInfo();
-    SystemInfoService.currentAppUpdates.listen((appName) {
+    _yabaiService.currentAppStream.listen((appName) {
       if (mounted) {
         setState(() {
           _currentApp = appName;
         });
       }
     });
-  }
-
-  void _updateAppInfo() async {
-    final app = await SystemInfoService.getCurrentApp();
-    if (mounted) {
-      setState(() {
-        _currentApp = app;
-      });
-    }
   }
 
   @override

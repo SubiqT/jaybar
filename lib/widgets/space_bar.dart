@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/space.dart';
 import '../services/space_service.dart';
-import '../services/yabai_service.dart';
+import '../services/yabai_signal_service.dart';
 import '../services/screen_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/spacing.dart';
@@ -14,7 +14,7 @@ class SpaceBar extends StatefulWidget {
 }
 
 class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
-  final _yabaiService = YabaiService();
+  final _yabaiService = YabaiSignalService.instance;
   
   int? _switchingToSpace;
   int? _hoveredSpace;
@@ -37,7 +37,7 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
   }
   
   Future<void> _initializeService() async {
-    await _yabaiService.start();
+    // Service is already initialized in main.dart
   }
   
   Future<void> _getDisplayInfo() async {

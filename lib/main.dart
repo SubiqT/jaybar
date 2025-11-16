@@ -5,7 +5,7 @@ import 'package:window_manager/window_manager.dart';
 import 'widgets/space_bar.dart';
 import 'widgets/center_bar.dart';
 import 'widgets/system_info_bar.dart';
-import 'services/yabai_service.dart';
+import 'services/yabai_signal_service.dart';
 import 'services/screen_service.dart';
 import 'theme/app_colors.dart';
 import 'theme/spacing.dart';
@@ -16,6 +16,13 @@ const platform = MethodChannel('jaybar/window');
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
+  
+  // Initialize yabai signal service
+  try {
+    await YabaiSignalService.instance.start();
+  } catch (e) {
+    print('Failed to start yabai signal service: $e');
+  }
   
   // Configure window as always-on-top bar pinned to all workspaces
   await windowManager.waitUntilReadyToShow(null, () async {
