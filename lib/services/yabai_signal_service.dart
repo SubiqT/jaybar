@@ -35,6 +35,14 @@ class YabaiSignalService implements SpaceService {
   Stream<String> get currentAppStream => _currentAppController.stream;
   final _currentAppController = StreamController<String>.broadcast();
   
+  // Public method to force space refresh
+  Future<void> refreshSpaces() async {
+    await _updateSpaces();
+  }
+  
+  // Get current cached spaces
+  List<Space>? get currentSpaces => _cachedSpaces;
+  
   @override
   Future<void> start() async {
     if (_isStarted) return;
@@ -46,10 +54,12 @@ class YabaiSignalService implements SpaceService {
       throw Exception('netcat (nc) not available - required for yabai signals');
     }
     
-    await _setupSignalServer();
-    await _registerSignals();
+    // Load initial data first, before setting up signals
     await _initialSpaceLoad();
     await _initialAppLoad();
+    
+    await _setupSignalServer();
+    await _registerSignals();
     
     _isStarted = true;
   }
@@ -152,13 +162,13 @@ class YabaiSignalService implements SpaceService {
     _isQueryingSpaces = true;
     
     try {
-      final result = await Process.run(_yabaiPath!, ['-m', 'query', '--spaces']).timeout(Duration(seconds: 1));
+      final result = await Process.run(_yabaiPath!, ['-m', 'query', '--spaces']).timeout(Duration(seconds: 2));
       if (result.exitCode == 0) {
         final spaces = (jsonDecode(result.stdout.toString().trim()) as List)
             .map((json) => Space.fromJson(json))
             .toList();
         
-        if (!_spacesEqual(_cachedSpaces, spaces)) {
+        if (_cachedSpaces == null || !_spacesEqual(_cachedSpaces, spaces)) {
           _cachedSpaces = spaces;
           _spaceController.add(spaces);
         }

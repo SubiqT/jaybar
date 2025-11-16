@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../models/space.dart';
 import '../services/space_service.dart';
 import '../services/yabai_signal_service.dart';
@@ -21,6 +22,7 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
   String _displayInfo = '';
   late AnimationController _switchAnimationController;
   late Animation<double> _switchAnimation;
+  List<Space>? _initialSpaces;
   
   @override
   void initState() {
@@ -32,12 +34,20 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
     _switchAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _switchAnimationController, curve: Curves.easeInOut),
     );
-    _initializeService();
+    _loadInitialSpaces();
     _getDisplayInfo();
+    
+    // Fallback timer to force refresh if still loading after 2 seconds
+    Timer(Duration(seconds: 2), () {
+      if (mounted && _initialSpaces == null) {
+        _loadInitialSpaces();
+      }
+    });
   }
   
-  Future<void> _initializeService() async {
-    // Service is already initialized in main.dart
+  Future<void> _loadInitialSpaces() async {
+    // Force an immediate space query to populate the UI
+    await _yabaiService.refreshSpaces();
   }
   
   Future<void> _getDisplayInfo() async {
@@ -82,8 +92,15 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return StreamBuilder<List<Space>>(
       stream: _yabaiService.spaceStream,
+      initialData: _yabaiService.currentSpaces,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        final spaces = snapshot.data ?? _yabaiService.currentSpaces;
+        
+        if (spaces == null || spaces.isEmpty) {
+          if (_initialSpaces == null) {
+            _loadInitialSpaces();
+          }
+          
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
@@ -110,11 +127,12 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
           );
         }
         
+        _initialSpaces = spaces;
+        
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Space indicators
-            ...snapshot.data!.map((space) => 
+            ...spaces.map((space) => 
               MouseRegion(
                 onEnter: (_) => setState(() => _hoveredSpace = space.index),
                 onExit: (_) => setState(() => _hoveredSpace = null),
