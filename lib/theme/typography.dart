@@ -3,7 +3,7 @@ import 'app_colors.dart';
 
 class AppTypography {
   static const TextStyle spaceNumber = TextStyle(
-    fontSize: 8,
+    fontSize: 12,
     fontWeight: FontWeight.w600,
     color: AppColors.background,
     height: 1.0,

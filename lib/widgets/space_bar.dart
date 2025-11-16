@@ -155,37 +155,33 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
               final isSwitching = _switchingToSpace == space.index;
               final scale = isSwitching ? _switchAnimation.value : (isHovered ? 1.1 : 1.0);
               
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Transform.scale(
-                  scale: scale,
-                  child: Container(
-                    width: AppSpacing.spaceSize,
-                    height: AppSpacing.spaceSize,
-                    margin: EdgeInsets.only(right: AppSpacing.spaceRightMargin),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: space.hasFocus ? Border.all(
+              return Transform.scale(
+                scale: scale,
+                child: Container(
+                  width: 24,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    border: space.hasFocus ? Border(
+                      bottom: BorderSide(
                         color: AppColors.spaceFocused,
-                        width: AppBorders.focusedBorderWidth,
-                      ) : null,
-                    ),
+                        width: 2,
+                      ),
+                    ) : null,
+                  ),
+                  child: Container(
+                    padding: space.hasFocus ? EdgeInsets.only(top: 1) : null,
                     child: Center(
                       child: Container(
-                        width: AppSpacing.spaceInnerSize,
-                        height: AppSpacing.spaceInnerSize,
+                        width: space.hasFocus ? 12 : 8,
+                        height: space.hasFocus ? 12 : 8,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: _getInnerSpaceColor(space),
-                          border: _getInnerSpaceBorder(space),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${space.index}',
-                            style: AppTypography.spaceNumber.copyWith(
-                              color: _getTextColor(space),
-                            ),
-                          ),
+                          color: space.hasFocus 
+                              ? AppColors.spaceFocused 
+                              : (!space.isOccupied 
+                                  ? AppColors.foreground.withOpacity(0.3)
+                                  : AppColors.foreground),
                         ),
                       ),
                     ),
@@ -211,46 +207,5 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
     return widgets;
   }
   
-  Color _getInnerSpaceColor(Space space) {
-    if (space.hasFocus && !space.isOccupied) {
-      // Focused empty space: transparent
-      return AppColors.spaceEmpty;
-    }
-    if (space.hasFocus) {
-      // Focused occupied space: gradient (using magenta as solid color)
-      return AppColors.spaceFocused;
-    }
-    if (space.isOccupied) {
-      // Occupied space: foreground color
-      return AppColors.spaceOccupied;
-    }
-    // Empty space: transparent
-    return AppColors.spaceEmpty;
-  }
-  
-  Border? _getInnerSpaceBorder(Space space) {
-    if (space.hasFocus && !space.isOccupied) {
-      // Focused empty space: magenta border
-      return Border.all(color: AppColors.spaceFocused, width: AppBorders.borderWidth);
-    }
-    if (!space.isOccupied) {
-      // Empty space: foreground border
-      return Border.all(color: AppColors.spaceBorder, width: AppBorders.borderWidth);
-    }
-    // Occupied spaces: no border
-    return null;
-  }
-  
-  Color _getTextColor(Space space) {
-    if (space.hasFocus && !space.isOccupied) {
-      // Focused empty space: magenta text
-      return AppColors.spaceFocused;
-    }
-    if (!space.isOccupied) {
-      // Empty space: foreground text
-      return AppColors.foreground;
-    }
-    // Occupied spaces: background text (dark on light)
-    return AppColors.background;
-  }
+
 }
