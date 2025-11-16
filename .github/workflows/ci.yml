@@ -1,18 +1,72 @@
-name: CI
+name: CI/CD
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, release ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, release ]
 
 jobs:
-  build:
+  release:
+    if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/release') && github.event_name == 'push'
     runs-on: macos-latest
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
     - uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.38.1'
-    - run: flutter pub get
-    - run: flutter build macos --release
+    
+    - name: Generate version
+      id: version
+      run: |
+        VERSION=$(date -u +"%Y.%m.%d.%H%M")
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Update pubspec.yaml
+      run: |
+        sed -i '' "s/^version: .*/version: ${{ steps.version.outputs.version }}+1/" pubspec.yaml
+    
+    - name: Build release
+      run: |
+        flutter pub get
+        flutter build macos --release --build-name=${{ steps.version.outputs.version }}
+    
+    - name: Create release archive
+      run: |
+        cd build/macos/Build/Products/Release
+        zip -r jaybar-${{ steps.version.outputs.version }}-macos.zip jaybar.app
+        mv jaybar-${{ steps.version.outputs.version }}-macos.zip $GITHUB_WORKSPACE/
+    
+    - name: Generate changelog
+      id: changelog
+      run: |
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ -z "$LAST_TAG" ]; then
+          COMMITS=$(git log --oneline --pretty=format:"- %s" | head -20)
+        else
+          COMMITS=$(git log --oneline --pretty=format:"- %s" $LAST_TAG..HEAD)
+        fi
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        echo "$COMMITS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.tag }}
+        name: ${{ steps.version.outputs.tag }}
+        body: |
+          ## Changes
+          ${{ steps.changelog.outputs.changelog }}
+          
+          ## Installation
+          Download and extract the zip file, then move jaybar.app to your Applications folder.
+        files: jaybar-${{ steps.version.outputs.version }}-macos.zip
+        draft: false
+        prerelease: ${{ github.ref == 'refs/heads/master' }}
