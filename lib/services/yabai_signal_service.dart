@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:process_run/shell.dart';
 import '../models/space.dart';
 import 'space_service.dart';
+import 'app_icon_service.dart';
 
 class YabaiSignalService implements SpaceService {
   static const _yabaiPaths = [
@@ -35,9 +36,16 @@ class YabaiSignalService implements SpaceService {
   Stream<String> get currentAppStream => _currentAppController.stream;
   final _currentAppController = StreamController<String>.broadcast();
   
+  String? get currentApp => _cachedCurrentApp;
+  
   // Public method to force space refresh
   Future<void> refreshSpaces() async {
     await _updateSpaces();
+  }
+  
+  // Public method to force current app refresh
+  Future<void> refreshCurrentApp() async {
+    await _updateCurrentApp();
   }
   
   // Get current cached spaces
@@ -79,6 +87,7 @@ class YabaiSignalService implements SpaceService {
       await _server?.close();
       
       _server = await ServerSocket.bind('localhost', _signalPort);
+      
       _server!.listen((socket) {
         socket.cast<List<int>>().transform(utf8.decoder).listen((data) {
           _handleSignal(data.trim());
@@ -93,7 +102,7 @@ class YabaiSignalService implements SpaceService {
       });
     } catch (e) {
       print('Failed to start signal server: $e');
-      rethrow;
+      // Continue without signal server - polling will still work
     }
   }
   
@@ -140,18 +149,32 @@ class YabaiSignalService implements SpaceService {
   }
   
   void _handleSignal(String signal) {
+    // Handle window_focused immediately without debounce
+    if (signal == 'window_focused') {
+      if (!_isQueryingApp) {
+        _updateCurrentApp();
+      }
+      return;
+    }
+    
+    // Debounce other signals
     _debounceTimer?.cancel();
     _debounceTimer = Timer(Duration(milliseconds: 25), () {
       switch (signal) {
         case 'space_changed':
         case 'display_changed':
-          if (!_isQueryingSpaces) _updateSpaces();
+          if (!_isQueryingSpaces) {
+            _updateSpaces();
+          }
           break;
-        case 'window_focused':
         case 'window_created':
         case 'window_destroyed':
-          if (!_isQueryingSpaces) _updateSpaces();
-          if (!_isQueryingApp) _updateCurrentApp();
+          if (!_isQueryingSpaces) {
+            _updateSpaces();
+          }
+          if (!_isQueryingApp) {
+            _updateCurrentApp();
+          }
           break;
       }
     });
@@ -171,6 +194,9 @@ class YabaiSignalService implements SpaceService {
         if (_cachedSpaces == null || !_spacesEqual(_cachedSpaces, spaces)) {
           _cachedSpaces = spaces;
           _spaceController.add(spaces);
+          
+          // Proactively cache icons for all open apps
+          _cacheOpenAppIcons();
         }
       }
     } catch (e) {
@@ -180,17 +206,48 @@ class YabaiSignalService implements SpaceService {
     }
   }
   
+  Future<void> _cacheOpenAppIcons() async {
+    try {
+      final result = await Process.run(_yabaiPath!, ['-m', 'query', '--windows'])
+          .timeout(Duration(milliseconds: 500));
+      
+      if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
+        final windows = jsonDecode(result.stdout.toString().trim()) as List;
+        final appNames = windows
+            .map((window) => window['app']?.toString())
+            .where((app) => app != null && app.isNotEmpty)
+            .cast<String>()
+            .toSet()
+            .toList();
+        
+
+      }
+    } catch (e) {
+      // Handle error silently
+    }
+  }
+  
   Future<void> _updateCurrentApp() async {
-    if (_isQueryingApp) return;
+    if (_isQueryingApp) {
+      return;
+    }
     _isQueryingApp = true;
     
     try {
-      final result = await Process.run(_yabaiPath!, ['-m', 'query', '--windows', '--window']).timeout(Duration(seconds: 1));
+      // Query all windows and find the focused one
+      final result = await Process.run(_yabaiPath!, ['-m', 'query', '--windows'])
+          .timeout(Duration(milliseconds: 500));
+      
       if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty && result.stdout.toString().trim() != 'null') {
-        final data = jsonDecode(result.stdout.toString().trim());
-        final app = data['app']?.toString() ?? 'Desktop';
+        final windows = jsonDecode(result.stdout.toString().trim()) as List;
+        final focusedWindow = windows.firstWhere(
+          (window) => window['has-focus'] == true,
+          orElse: () => null,
+        );
         
-        if (app != _cachedCurrentApp) {
+        final app = focusedWindow?['app']?.toString() ?? 'Desktop';
+        
+        if (app != _cachedCurrentApp || _cachedCurrentApp == null) {
           _cachedCurrentApp = app;
           _currentAppController.add(app);
         }
