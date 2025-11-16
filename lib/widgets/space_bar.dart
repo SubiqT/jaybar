@@ -131,66 +131,84 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
         
         return Row(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            ...spaces.map((space) => 
-              MouseRegion(
-                onEnter: (_) => setState(() => _hoveredSpace = space.index),
-                onExit: (_) => setState(() => _hoveredSpace = null),
-                child: GestureDetector(
-                  onTap: () => _switchToSpace(space.index),
-                  child: AnimatedBuilder(
-                    animation: _switchAnimation,
-                    builder: (context, child) {
-                      final isHovered = _hoveredSpace == space.index;
-                      final isSwitching = _switchingToSpace == space.index;
-                      final scale = isSwitching ? _switchAnimation.value : (isHovered ? 1.1 : 1.0);
-                      
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Transform.scale(
-                          scale: scale,
-                          child: Container(
-                            width: AppSpacing.spaceSize,
-                            height: AppSpacing.spaceSize,
-                            margin: EdgeInsets.only(right: AppSpacing.spaceRightMargin),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: space.hasFocus ? Border.all(
-                                color: AppColors.spaceFocused,
-                                width: AppBorders.focusedBorderWidth,
-                              ) : null,
-                            ),
-                            child: Center(
-                              child: Container(
-                                width: AppSpacing.spaceInnerSize,
-                                height: AppSpacing.spaceInnerSize,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: _getInnerSpaceColor(space),
-                                  border: _getInnerSpaceBorder(space),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    '${space.index}',
-                                    style: AppTypography.spaceNumber.copyWith(
-                                      color: _getTextColor(space),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ).toList(),
-          ],
+          children: _buildGroupedSpaces(spaces),
         );
       },
     );
+  }
+  
+  List<Widget> _buildGroupedSpaces(List<Space> spaces) {
+    List<Widget> widgets = [];
+    
+    for (int i = 0; i < spaces.length; i++) {
+      final space = spaces[i];
+      
+      widgets.add(MouseRegion(
+        onEnter: (_) => setState(() => _hoveredSpace = space.index),
+        onExit: (_) => setState(() => _hoveredSpace = null),
+        child: GestureDetector(
+          onTap: () => _switchToSpace(space.index),
+          child: AnimatedBuilder(
+            animation: _switchAnimation,
+            builder: (context, child) {
+              final isHovered = _hoveredSpace == space.index;
+              final isSwitching = _switchingToSpace == space.index;
+              final scale = isSwitching ? _switchAnimation.value : (isHovered ? 1.1 : 1.0);
+              
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Transform.scale(
+                  scale: scale,
+                  child: Container(
+                    width: AppSpacing.spaceSize,
+                    height: AppSpacing.spaceSize,
+                    margin: EdgeInsets.only(right: AppSpacing.spaceRightMargin),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: space.hasFocus ? Border.all(
+                        color: AppColors.spaceFocused,
+                        width: AppBorders.focusedBorderWidth,
+                      ) : null,
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: AppSpacing.spaceInnerSize,
+                        height: AppSpacing.spaceInnerSize,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _getInnerSpaceColor(space),
+                          border: _getInnerSpaceBorder(space),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${space.index}',
+                            style: AppTypography.spaceNumber.copyWith(
+                              color: _getTextColor(space),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ));
+      
+      // Add separator after every 3rd space (but not after the last space)
+      if ((i + 1) % 3 == 0 && i < spaces.length - 1) {
+        widgets.add(Container(
+          width: 1,
+          height: 12,
+          margin: EdgeInsets.symmetric(horizontal: 8),
+          color: Colors.white24,
+        ));
+      }
+    }
+    
+    return widgets;
   }
   
   Color _getInnerSpaceColor(Space space) {
