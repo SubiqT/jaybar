@@ -3,15 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 import '../models/space.dart';
 import 'space_service.dart';
+import 'process_pool.dart';
 
 class YabaiService implements SpaceService {
-  static const _yabaiPaths = [
-    '/opt/homebrew/bin/yabai',
-    '/usr/local/bin/yabai',
-    '/usr/bin/yabai'
-  ];
-  
-  String? _yabaiPath;
   Timer? _pollTimer;
   
   // Caching and state management
@@ -24,9 +18,6 @@ class YabaiService implements SpaceService {
   
   @override
   Future<void> start() async {
-    _yabaiPath = await _findYabai();
-    if (_yabaiPath == null) throw Exception('yabai not found in common paths');
-    
     _pollTimer = Timer.periodic(
       Duration(milliseconds: 50),
       (_) => _pollSpaces(),
@@ -35,10 +26,10 @@ class YabaiService implements SpaceService {
   
   Future<void> _pollSpaces() async {
     try {
-      final result = await Process.run(_yabaiPath!, ['-m', 'query', '--spaces']);
-      if (result.exitCode != 0) return;
+      final result = await ProcessPool.instance.runYabaiCommand(['-m', 'query', '--spaces']);
+      if (result?.exitCode != 0 || result?.stdout.isEmpty == true) return;
       
-      final rawOutput = result.stdout.toString().trim();
+      final rawOutput = result!.stdout.trim();
       
       // Only process if output changed
       if (rawOutput != _lastRawOutput) {
@@ -74,27 +65,19 @@ class YabaiService implements SpaceService {
     return true;
   }
   
-  Future<String?> _findYabai() async {
-    for (final path in _yabaiPaths) {
-      if (await File(path).exists()) return path;
-    }
-    return null;
-  }
-  
   @override
   Future<void> switchToSpace(int index) async {
-    if (_yabaiPath != null) {
-      try {
-        await Process.run(_yabaiPath!, ['-m', 'space', '--focus', index.toString()]);
-      } catch (e) {
-        print('Error switching to space $index: $e');
-      }
+    try {
+      await ProcessPool.instance.runYabaiCommand(['-m', 'space', '--focus', index.toString()]);
+    } catch (e) {
+      print('Error switching to space $index: $e');
     }
   }
   
   @override
   void dispose() {
     _pollTimer?.cancel();
+    ProcessPool.instance.killAllProcesses();
     _spaceController.close();
   }
 }

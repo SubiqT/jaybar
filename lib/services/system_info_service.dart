@@ -1,14 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'process_pool.dart';
 
 class SystemInfoService {
   /// Get the current active application name
   static Future<String> getCurrentApp() async {
     try {
-      final result = await Process.run('yabai', ['-m', 'query', '--windows', '--window']);
-      if (result.exitCode == 0) {
-        final json = result.stdout.toString().trim();
+      final result = await ProcessPool.instance.runYabaiCommand(['-m', 'query', '--windows', '--window']);
+      if (result?.exitCode == 0 && result!.stdout.isNotEmpty) {
+        final json = result.stdout.trim();
         if (json.isNotEmpty && json != 'null' && json != '{}') {
           final data = jsonDecode(json);
           final app = data['app']?.toString();
@@ -20,9 +21,9 @@ class SystemInfoService {
     } catch (e) {
       // If yabai query fails, try getting all windows and find focused one
       try {
-        final result = await Process.run('yabai', ['-m', 'query', '--windows']);
-        if (result.exitCode == 0) {
-          final json = result.stdout.toString().trim();
+        final result = await ProcessPool.instance.runYabaiCommand(['-m', 'query', '--windows']);
+        if (result?.exitCode == 0 && result!.stdout.isNotEmpty) {
+          final json = result.stdout.trim();
           final windows = jsonDecode(json) as List;
           for (final window in windows) {
             if (window['has-focus'] == true) {

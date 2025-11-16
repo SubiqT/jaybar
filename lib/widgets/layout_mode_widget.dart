@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../services/process_pool.dart';
 
 class LayoutModeWidget extends StatefulWidget {
   const LayoutModeWidget({super.key});
@@ -29,8 +30,8 @@ class _LayoutModeWidgetState extends State<LayoutModeWidget> {
 
   Future<void> _updateLayoutMode() async {
     try {
-      final result = await Process.run('yabai', ['-m', 'query', '--spaces', '--space']);
-      if (result.exitCode == 0) {
+      final result = await ProcessPool.instance.runYabaiCommand(['-m', 'query', '--spaces', '--space']);
+      if (result?.exitCode == 0 && result!.stdout.isNotEmpty) {
         final data = jsonDecode(result.stdout);
         final newMode = data['type'] ?? 'bsp';
         if (mounted && newMode != _layoutMode) {

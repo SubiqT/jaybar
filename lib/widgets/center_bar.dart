@@ -84,7 +84,7 @@ class _CenterBarState extends State<CenterBar> {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 150),
       child: Container(
-        key: ValueKey(_currentApp),
+        key: ValueKey('${_currentApp}_${DateTime.now().millisecondsSinceEpoch}'),
         height: 24,
         alignment: Alignment.center,
         padding: EdgeInsets.symmetric(horizontal: AppSpacing.containerPadding),
