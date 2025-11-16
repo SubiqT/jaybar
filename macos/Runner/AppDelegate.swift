@@ -1,5 +1,7 @@
 import Cocoa
 import FlutterMacOS
+import ImageIO
+import UniformTypeIdentifiers
 
 @main
 class AppDelegate: FlutterAppDelegate {
@@ -35,24 +37,29 @@ class AppDelegate: FlutterAppDelegate {
       if call.method == "getFocusedAppIcon" {
         DispatchQueue.global(qos: .userInitiated).async {
           guard let frontApp = NSWorkspace.shared.frontmostApplication,
-                let bundleID = frontApp.bundleIdentifier else {
+                let appName = frontApp.localizedName else {
             DispatchQueue.main.async { result(nil) }
             return
           }
           
-          // Use smaller icon size for faster loading
           let icon = NSWorkspace.shared.icon(forFile: frontApp.bundleURL?.path ?? "")
-          icon.size = NSSize(width: 32, height: 32)
+          icon.size = NSSize(width: 16, height: 16)
           
-          guard let tiffData = icon.tiffRepresentation,
-                let bitmap = NSBitmapImageRep(data: tiffData),
-                let pngData = bitmap.representation(using: .png, properties: [:]) else {
+          guard let cgImage = icon.cgImage(forProposedRect: nil, context: nil, hints: nil),
+                let data = CFDataCreateMutable(nil, 0),
+                let destination = CGImageDestinationCreateWithData(data, kUTTypePNG, 1, nil) else {
             DispatchQueue.main.async { result(nil) }
             return
           }
+          
+          CGImageDestinationAddImage(destination, cgImage, nil)
+          CGImageDestinationFinalize(destination)
           
           DispatchQueue.main.async {
-            result(FlutterStandardTypedData(bytes: pngData))
+            result([
+              "appName": appName,
+              "icon": FlutterStandardTypedData(bytes: Data(referencing: data))
+            ])
           }
         }
       } else {

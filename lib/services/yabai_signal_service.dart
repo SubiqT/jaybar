@@ -234,7 +234,6 @@ class YabaiSignalService implements SpaceService {
     _isQueryingApp = true;
     
     try {
-      // Query all windows and find the focused one
       final result = await Process.run(_yabaiPath!, ['-m', 'query', '--windows'])
           .timeout(Duration(milliseconds: 500));
       

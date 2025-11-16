@@ -28,14 +28,12 @@ class _CenterBarState extends State<CenterBar> {
         if (appName != _currentApp) {
           setState(() {
             _currentApp = appName;
-            _appIcon = null; // Clear icon while loading
           });
           _updateAppIcon();
         }
       }
     });
     
-    // Get current app immediately if available
     final currentApp = _yabaiService.currentApp;
     if (currentApp != null) {
       setState(() {
@@ -43,10 +41,25 @@ class _CenterBarState extends State<CenterBar> {
       });
     }
     
-    _updateAppIcon(); // Initial icon fetch
+    _updateAppIcon();
   }
 
   void _updateAppIcon() {
+    // Check cache first
+    final cachedIcon = AppIconService.getCachedIcon(_currentApp);
+    if (cachedIcon != null) {
+      setState(() {
+        _appIcon = cachedIcon;
+      });
+      return;
+    }
+    
+    // Clear icon while loading new one
+    setState(() {
+      _appIcon = null;
+    });
+    
+    // Fetch new icon
     AppIconService.getFocusedAppIcon().then((icon) {
       if (mounted) {
         setState(() {
@@ -76,14 +89,19 @@ class _CenterBarState extends State<CenterBar> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (_appIcon != null) ...[
-              Image.memory(
-                _appIcon!,
-                width: 16,
-                height: 16,
-              ),
-              const SizedBox(width: 6),
-            ],
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: _appIcon != null
+                  ? Image.memory(_appIcon!, width: 16, height: 16)
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.grey400.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+            ),
+            const SizedBox(width: 6),
             Text(
               _currentApp,
               style: AppTypography.systemInfo.copyWith(
