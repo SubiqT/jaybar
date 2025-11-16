@@ -188,7 +188,7 @@ void main(List<String> args) async {
   // Handle CLI commands
   if (args.isNotEmpty) {
     await handleCliCommand(args);
-    return;
+    exit(0);
   }
   
   WidgetsFlutterBinding.ensureInitialized();
