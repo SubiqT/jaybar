@@ -8,6 +8,7 @@ import 'widgets/center_bar.dart';
 import 'widgets/system_info_bar.dart';
 import 'services/yabai_signal_service.dart';
 import 'services/screen_service.dart';
+import 'services/system_tray_service.dart';
 import 'theme/app_colors.dart';
 import 'theme/spacing.dart';
 import 'theme/borders.dart';
@@ -191,6 +192,9 @@ Future<void> installLaunchAgent() async {
 Future<void> runAsService() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
+  
+  // Initialize system tray
+  await SystemTrayService.instance.initialize();
   
   // Initialize yabai signal service
   try {
