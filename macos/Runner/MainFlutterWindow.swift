@@ -9,7 +9,7 @@ class MainFlutterWindow: NSWindow {
     self.setFrame(windowFrame, display: true)
     
     // Configure window transparency
-    self.styleMask = [.borderless]
+    self.styleMask = [.borderless, .fullSizeContentView]
     self.isOpaque = false
     self.backgroundColor = NSColor.clear
     self.hasShadow = false
@@ -21,5 +21,13 @@ class MainFlutterWindow: NSWindow {
     RegisterGeneratedPlugins(registry: flutterViewController)
 
     super.awakeFromNib()
+  }
+  
+  override var contentLayoutRect: NSRect {
+    return self.frame
+  }
+  
+  override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
+    return frameRect
   }
 }

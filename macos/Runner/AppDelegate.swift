@@ -27,6 +27,23 @@ class AppDelegate: FlutterAppDelegate {
           window.collectionBehavior = [.ignoresCycle, .canJoinAllSpaces, .stationary]
         }
         result(nil)
+      } else if call.method == "positionInNotch" {
+        if let window = self.mainFlutterWindow,
+           let screen = NSScreen.main {
+          if #available(macOS 12.0, *) {
+            window.titlebarSeparatorStyle = .none
+          }
+          window.titleVisibility = .hidden
+          window.styleMask.insert(.fullSizeContentView)
+          
+          let screenFrame = screen.frame
+          let windowWidth = screenFrame.width
+          let windowHeight = CGFloat(32.0)
+          let targetFrame = NSRect(x: 0, y: screenFrame.maxY - windowHeight, width: windowWidth, height: windowHeight)
+          
+          window.setFrame(targetFrame, display: true)
+        }
+        result(nil)
       } else {
         result(FlutterMethodNotImplemented)
       }

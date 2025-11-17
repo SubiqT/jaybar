@@ -218,8 +218,13 @@ Future<void> runAsService() async {
       print('Failed to set window collection behavior: $e');
     }
     
-    // Use dynamic screen sizing instead of hardcoded dimensions
-    await ScreenService.positionBar();
+    // Position window in notch area using native API
+    try {
+      await platform.invokeMethod('positionInNotch');
+    } catch (e) {
+      print('Failed to position in notch: $e');
+      await ScreenService.positionBar();
+    }
     
     await windowManager.show();
   });

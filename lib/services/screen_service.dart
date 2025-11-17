@@ -30,7 +30,6 @@ class ScreenService {
       await windowManager.setSize(size);
       await windowManager.setPosition(const Offset(0, 0));
     } catch (e) {
-      // Fallback positioning
       await windowManager.setSize(const Size(1920, barHeight));
       await windowManager.setPosition(const Offset(0, 0));
     }
