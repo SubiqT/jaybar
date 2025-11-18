@@ -79,7 +79,7 @@ Future<void> startService() async {
     return;
   }
   
-  final result = await Process.run('launchctl', ['load', plistPath]);
+  final result = await Process.run('launchctl', ['start', 'com.jaybar']);
   if (result.exitCode == 0) {
     print('jaybar service started');
   } else {
@@ -96,7 +96,7 @@ Future<void> stopService() async {
   
   final plistPath = '$homeDir/Library/LaunchAgents/com.jaybar.plist';
   
-  final result = await Process.run('launchctl', ['unload', plistPath]);
+  final result = await Process.run('launchctl', ['stop', 'com.jaybar']);
   if (result.exitCode == 0) {
     print('jaybar service stopped');
   } else {
@@ -167,7 +167,6 @@ Future<void> installLaunchAgent() async {
     <key>ProgramArguments</key>
     <array>
         <string>$executablePath</string>
-        <string>--service</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
