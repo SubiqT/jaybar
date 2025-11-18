@@ -1,67 +1,46 @@
 # jaybar
 
-A Flutter-powered status bar for yabai.
+A Flutter-powered status bar for macOS that integrates with yabai window manager.
+
+![jaybar preview](preview.png)
 
 ## Features
 
-- Lightweight status bar replacement
-- Built with Flutter for native performance
-- Customizable and extensible
+- **Yabai Integration**: Real-time workspace/space switching with visual feedback
+- **System Monitoring**: Battery, volume, network status, and time/date display
+- **Layout Mode Indicator**: Displays current yabai layout (bsp/stack/float)
+- **Current App Display**: Shows focused application with icon
+- **Caffeinate Toggle**: Quick access to prevent system sleep
 
 ## Installation
 
-### Development
+### Homebrew (recommended)
+
 ```bash
+brew tap SubiqT/jaybar
+brew install jaybar
+```
+
+### Build from source
+
+```bash
+# Clone and build
+git clone https://github.com/SubiqT/jaybar.git
+cd jaybar
 flutter pub get
-flutter run
-```
-
-### Distribution
-1. Build the app:
-```bash
 flutter build macos --release
-```
 
-2. Install the app:
-```bash
+# Install to Applications
 cp -r build/macos/Build/Products/Release/jaybar.app /Applications/
-```
 
-3. Add to PATH (optional, for CLI access):
-```bash
+# Add to PATH for CLI access
 echo 'export PATH="/Applications/jaybar.app/Contents/MacOS:$PATH"' >> ~/.zshrc
 source ~/.zshrc
-```
 
-4. Enable and start the service:
-```bash
+# Enable and start the service
 jaybar --enable-service
 jaybar --start-service
 ```
-
-### CLI Usage
-```bash
-jaybar                    # Start the status bar GUI
-jaybar --start-service    # Start the jaybar service
-jaybar --stop-service     # Stop the jaybar service  
-jaybar --restart-service  # Restart the jaybar service
-jaybar --enable-service   # Enable the launch agent
-jaybar --disable-service  # Disable the launch agent
-jaybar --help             # Show help message
-```
-
-### Manual Service Management
-```bash
-# Stop service
-launchctl unload ~/Library/LaunchAgents/com.jaybar.plist
-
-# Start service  
-launchctl load ~/Library/LaunchAgents/com.jaybar.plist
-```
-
-## Development
-
-This project uses Flutter. Make sure you have Flutter installed and configured for macOS development.
 
 ## License
 
