@@ -20,7 +20,7 @@ class YabaiSignalService implements SpaceService {
   
   String? _yabaiPath;
   ServerSocket? _server;
-  static const _signalPort = 8080;
+  int? _signalPort;
   bool _isStarted = false;
   
   List<Space>? _cachedSpaces;
@@ -86,7 +86,9 @@ class YabaiSignalService implements SpaceService {
       // Clean up any existing server first
       await _server?.close();
       
-      _server = await ServerSocket.bind('localhost', _signalPort);
+      _server = await ServerSocket.bind('localhost', 0);
+      _signalPort = _server!.port;
+      print('Signal server listening on port $_signalPort');
       
       _server!.listen((socket) {
         // Set socket timeout and auto-close
@@ -131,6 +133,11 @@ class YabaiSignalService implements SpaceService {
   Future<void> _registerSignals() async {
     // Clean up any existing signals first
     await _cleanupSignals();
+    
+    if (_signalPort == null) {
+      print('Cannot register signals: port not allocated');
+      return;
+    }
     
     final signals = [
       'space_changed',
