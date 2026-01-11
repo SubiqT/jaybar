@@ -104,6 +104,9 @@ class AppDelegate: FlutterAppDelegate {
           
           DispatchQueue.main.async { result(hexColor) }
         }
+      } else if call.method == "startWallpaperMonitoring" {
+        self.startWallpaperMonitoring(channel: wallpaperChannel)
+        result(nil)
       } else {
         result(FlutterMethodNotImplemented)
       }
@@ -159,8 +162,36 @@ class AppDelegate: FlutterAppDelegate {
     let avgGreen = green / Double(totalPixels * 255)
     let avgBlue = blue / Double(totalPixels * 255)
     
-    print("Wallpaper dominant color: R=\(avgRed), G=\(avgGreen), B=\(avgBlue)")
-    
     return NSColor(red: avgRed, green: avgGreen, blue: avgBlue, alpha: 1.0)
+  }
+  
+  private func startWallpaperMonitoring(channel: FlutterMethodChannel) {
+    // Monitor space changes
+    NSWorkspace.shared.notificationCenter.addObserver(
+      forName: NSWorkspace.activeSpaceDidChangeNotification,
+      object: nil,
+      queue: .main
+    ) { _ in
+      self.notifyWallpaperChange(channel: channel)
+    }
+  }
+  
+  private func notifyWallpaperChange(channel: FlutterMethodChannel) {
+    DispatchQueue.global(qos: .userInitiated).async {
+      guard let desktopImageURL = NSWorkspace.shared.desktopImageURL(for: NSScreen.main ?? NSScreen.screens[0]),
+            let image = NSImage(contentsOf: desktopImageURL) else {
+        return
+      }
+      
+      let dominantColor = self.getDominantColor(from: image)
+      let hexColor = String(format: "#%02X%02X%02X", 
+                           Int(dominantColor.redComponent * 255),
+                           Int(dominantColor.greenComponent * 255),
+                           Int(dominantColor.blueComponent * 255))
+      
+      DispatchQueue.main.async {
+        channel.invokeMethod("onWallpaperChanged", arguments: hexColor)
+      }
+    }
   }
 }

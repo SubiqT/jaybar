@@ -20,34 +20,15 @@ class ColorMatcher {
     Color closestColor = _appPalette.first;
     double minDistance = double.infinity;
     
-    print('Finding closest color for: R=${targetColor.red}, G=${targetColor.green}, B=${targetColor.blue}');
-    
     for (final color in _appPalette) {
       final distance = _colorDistance(targetColor, color);
-      print('Distance to ${_colorName(color)}: $distance');
       if (distance < minDistance) {
         minDistance = distance;
         closestColor = color;
       }
     }
     
-    print('Selected color: ${_colorName(closestColor)}');
     return closestColor;
-  }
-  
-  static String _colorName(Color color) {
-    if (color.value == 0xFFcc6566) return 'red';
-    if (color.value == 0xFFd54e53) return 'brightRed';
-    if (color.value == 0xFFb6bd68) return 'green';
-    if (color.value == 0xFFb9ca4b) return 'brightGreen';
-    if (color.value == 0xFFf0c674) return 'yellow';
-    if (color.value == 0xFF82a2be) return 'blue';
-    if (color.value == 0xFF7aa6da) return 'brightBlue';
-    if (color.value == 0xFFb294bb) return 'magenta';
-    if (color.value == 0xFFc397d8) return 'brightMagenta';
-    if (color.value == 0xFF8abeb7) return 'cyan';
-    if (color.value == 0xFF70c0b1) return 'brightCyan';
-    return 'unknown';
   }
   
   static double _colorDistance(Color c1, Color c2) {

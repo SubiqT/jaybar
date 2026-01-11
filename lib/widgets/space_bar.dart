@@ -39,6 +39,12 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
     _getDisplayInfo();
     _initializeWallpaperColor();
     
+    // Listen for wallpaper changes
+    WallpaperService.colorStream.listen((color) {
+      AppColors.updateSpaceFocusedColor(color);
+      if (mounted) setState(() {});
+    });
+    
     // Fallback timer to force refresh if still loading after 2 seconds
     Timer(Duration(seconds: 2), () {
       if (mounted && _initialSpaces == null) {
@@ -50,6 +56,7 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
   Future<void> _initializeWallpaperColor() async {
     final color = await WallpaperService.getDominantColor();
     AppColors.updateSpaceFocusedColor(color);
+    await WallpaperService.startMonitoring();
     if (mounted) setState(() {});
   }
   
