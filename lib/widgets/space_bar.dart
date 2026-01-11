@@ -161,7 +161,7 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
                   width: 24,
                   height: double.infinity,
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: Colors.transparent,
                     border: space.hasFocus ? Border(
                       bottom: BorderSide(
                         color: AppColors.spaceFocused,
