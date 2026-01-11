@@ -9,6 +9,7 @@ import 'widgets/system_info_bar.dart';
 import 'services/yabai_signal_service.dart';
 import 'services/screen_service.dart';
 import 'services/system_tray_service.dart';
+import 'services/lock_service.dart';
 import 'theme/app_colors.dart';
 import 'theme/spacing.dart';
 import 'theme/borders.dart';
@@ -192,6 +193,16 @@ Future<void> runAsService() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
   
+  // Release lock on exit
+  ProcessSignal.sigterm.watch().listen((_) {
+    LockService.releaseLock();
+    exit(0);
+  });
+  ProcessSignal.sigint.watch().listen((_) {
+    LockService.releaseLock();
+    exit(0);
+  });
+  
   // Initialize system tray
   await SystemTrayService.instance.initialize();
   
@@ -232,6 +243,12 @@ Future<void> runAsService() async {
 }
 
 void main(List<String> args) async {
+  // Check for existing instance
+  if (!LockService.tryAcquireLock()) {
+    print('jaybar is already running');
+    exit(1);
+  }
+
   // Handle CLI commands BEFORE any Flutter initialization
   if (args.isNotEmpty) {
     await handleCliCommand(args);
