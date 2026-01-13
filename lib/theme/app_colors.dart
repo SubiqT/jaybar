@@ -21,8 +21,13 @@ class AppColors {
   static const Color highlight = Color(0xFF353a44);
   
   // Space states
-  static const Color spaceFocused = brightMagenta;
+  static Color spaceFocused = brightMagenta; // Now mutable for dynamic theming
   static const Color spaceOccupied = foreground;
   static const Color spaceBorder = foreground;
   static const Color spaceEmpty = Colors.transparent;
+  
+  // Dynamic color update
+  static void updateSpaceFocusedColor(Color color) {
+    spaceFocused = color;
+  }
 }

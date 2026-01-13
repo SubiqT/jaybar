@@ -4,6 +4,7 @@ import '../models/space.dart';
 import '../services/space_service.dart';
 import '../services/yabai_signal_service.dart';
 import '../services/screen_service.dart';
+import '../services/wallpaper_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/spacing.dart';
 import '../theme/borders.dart';
@@ -36,6 +37,13 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
     );
     _loadInitialSpaces();
     _getDisplayInfo();
+    _initializeWallpaperColor();
+    
+    // Listen for wallpaper changes
+    WallpaperService.colorStream.listen((color) {
+      AppColors.updateSpaceFocusedColor(color);
+      if (mounted) setState(() {});
+    });
     
     // Fallback timer to force refresh if still loading after 2 seconds
     Timer(Duration(seconds: 2), () {
@@ -43,6 +51,13 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
         _loadInitialSpaces();
       }
     });
+  }
+  
+  Future<void> _initializeWallpaperColor() async {
+    final color = await WallpaperService.getDominantColor();
+    AppColors.updateSpaceFocusedColor(color);
+    await WallpaperService.startMonitoring();
+    if (mounted) setState(() {});
   }
   
   Future<void> _loadInitialSpaces() async {
@@ -161,7 +176,7 @@ class _SpaceBarState extends State<SpaceBar> with TickerProviderStateMixin {
                   width: 24,
                   height: double.infinity,
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: Colors.transparent,
                     border: space.hasFocus ? Border(
                       bottom: BorderSide(
                         color: AppColors.spaceFocused,
